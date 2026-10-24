@@ -1,0 +1,22 @@
+# Version-control metadata
+.git/
+.github/
+
+# Generated build output
+**/bin/
+**/obj/
+
+# Editor files
+.vs/
+.vscode/
+**/*.user
+**/*.suo
+
+# Local environment settings and secrets
+.env
+.env.*
+**/secrets.json
+
+# Files not needed to publish the API
+docs/
+tests/
