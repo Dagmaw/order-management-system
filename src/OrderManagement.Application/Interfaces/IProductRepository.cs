@@ -12,5 +12,15 @@ namespace OrderManagement.Application.Interfaces
         Task<Product> AddAsync(
             Product product,
             CancellationToken cancellationToken= default);
+        Task<Product?> UpdateAsync(
+            int id,
+            string name,
+            string description,
+            decimal price,
+            CancellationToken cancellationToken = default);
+        Task<bool> DeleteAsync(
+            int id,
+            CancellationToken cancellationToken = default);
+
     }
 }

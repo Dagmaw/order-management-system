@@ -66,4 +66,23 @@ public class ProductService : IProductService
             CreatedAt = product.CreatedAt
         };
     }
+
+    public async Task<ProductDto?> UpdateProductAsync(int id, UpdateProductDto dto, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        var product = await _productRepository.UpdateAsync(
+            id,
+            dto.Name.Trim(),
+            dto.Description.Trim(),
+            dto.Price,
+            cancellationToken);
+
+        return product is null ? null : ToDto(product);
+    }
+
+    public async Task<bool> DeleteProductAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _productRepository.DeleteAsync(id, cancellationToken);
+    }
 }

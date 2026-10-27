@@ -40,5 +40,28 @@ namespace OrderManagement.API.Controllers
             var product = await _productService.CreateProductAsync(dto, cancellationToken);
             return CreatedAtRoute("GetProductById", new { id = product.Id }, product);
         }
+
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateProductAsync(int id, [FromBody] UpdateProductDto dto, CancellationToken cancellationToken)
+        {
+            var product = await _productService.UpdateProductAsync(id, dto, cancellationToken);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return Ok(product);
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteProductAsync(int id, CancellationToken cancellationToken)
+        {
+            var deleted = await _productService.DeleteProductAsync(id, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound();
+            }
+            return NoContent();
+        }   
+
     }
 }

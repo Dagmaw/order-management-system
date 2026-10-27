@@ -20,3 +20,6 @@
 # Files not needed to publish the API
 docs/
 tests/
+
+
+.env.local

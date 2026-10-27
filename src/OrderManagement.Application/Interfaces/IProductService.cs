@@ -15,5 +15,14 @@ namespace OrderManagement.Application.Interfaces
             CreateProductDto dto,
             CancellationToken cancellationToken = default);
 
+        Task<ProductDto?> UpdateProductAsync(
+            int id,
+            UpdateProductDto dto,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> DeleteProductAsync(
+            int id,
+            CancellationToken cancellationToken = default);
+
     }
 }

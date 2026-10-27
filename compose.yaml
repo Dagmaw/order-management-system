@@ -1,0 +1,10 @@
+services:
+  api:
+    image: order-management-api:day2
+    build:
+      context: .
+      dockerfile: src/OrderManagement.API/Dockerfile
+    ports:
+      - "127.0.0.1:5080:8080"
+    env_file:
+      - .env.local
