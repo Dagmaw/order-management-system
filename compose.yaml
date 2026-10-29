@@ -1,10 +1,20 @@
 services:
   api:
-    image: order-management-api:day2
+    image: order-management-api:day3
     build:
       context: .
       dockerfile: src/OrderManagement.API/Dockerfile
     ports:
       - "127.0.0.1:5080:8080"
+    env_file:
+      - .env.local
+
+  tools:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    profiles:
+      - tools
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
     env_file:
       - .env.local

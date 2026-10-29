@@ -5,8 +5,11 @@ using OrderManagement.Application.Interfaces;
 using OrderManagement.Domain.Entities;
 
 using OrderManagement.Infrastructure.Data;
+using Npgsql;
+using OrderManagement.Application.Exceptions;
 
 namespace OrderManagement.Infrastructure.Repositories;
+
 
 public class ProductRepository : IProductRepository
 {
@@ -70,7 +73,20 @@ public class ProductRepository : IProductRepository
         }
 
         _db.Products.Remove(product);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException postgres
+            && (postgres.SqlState == PostgresErrorCodes.ForeignKeyViolation
+                || postgres.SqlState == PostgresErrorCodes.RestrictViolation)
+            && postgres.ConstraintName == "FK_OrderItems_Products_ProductId")
+        {
+            throw new DataConflictException(
+                "This product cannot be deleted because it is referenced by an order.");
+        }
+
         return true;
     }
 }

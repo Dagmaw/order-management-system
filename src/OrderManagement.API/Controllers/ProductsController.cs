@@ -3,6 +3,7 @@
 using OrderManagement.Application.DTOs;
 
 using OrderManagement.Application.Interfaces;
+using OrderManagement.Application.Exceptions;
 
 namespace OrderManagement.API.Controllers
 {
@@ -55,12 +56,19 @@ namespace OrderManagement.API.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteProductAsync(int id, CancellationToken cancellationToken)
         {
-            var deleted = await _productService.DeleteProductAsync(id, cancellationToken);
-            if (!deleted)
+            try
             {
-                return NotFound();
+
+                var deleted = await _productService.DeleteProductAsync(id, cancellationToken);
+                return deleted ? NoContent() : NotFound();  
             }
-            return NoContent();
+            catch (DataConflictException ex)
+            {
+                return Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Product is referenced by an order",
+                    detail: ex.Message);
+            }
         }   
 
     }
