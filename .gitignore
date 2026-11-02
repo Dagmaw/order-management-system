@@ -482,3 +482,13 @@ $RECYCLE.BIN/
 *.swp
 
 .env.local
+
+
+# Terraform working files, state, and saved plans
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.tfstate.lock.info
+crash.log
+crash.*.log
