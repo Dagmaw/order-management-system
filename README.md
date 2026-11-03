@@ -1,4 +1,4 @@
-# Order Management System
+# Order Management System #
 
 An ASP.NET Core backend project being developed toward an AWS-hosted order management application.
 
