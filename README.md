@@ -1,66 +1,44 @@
-\# Order Management System
-
-
+# Order Management System
 
 An ASP.NET Core backend project being developed toward an AWS-hosted order management application.
 
-
-
 The current implementation provides a PostgreSQL-backed Product API, organized into Domain, Application, Infrastructure, and API projects.
 
+## Current Features
 
+- Create a product.
 
-\## Current Features
+- Retrieve all products.
 
+- Retrieve a product by ID.
 
+- Validate product creation requests.
 
-\- Create a product.
+- Return a not-found response for missing products.
 
-\- Retrieve all products.
+- Persist products using Entity Framework Core and PostgreSQL.
 
-\- Retrieve a product by ID.
+- Manage database schema changes through EF Core migrations.
 
-\- Validate product creation requests.
+- Build and run the API using a multi-stage Docker image.
 
-\- Return a not-found response for missing products.
+## Technology Stack
 
-\- Persist products using Entity Framework Core and PostgreSQL.
+- .NET 10 and ASP.NET Core controllers.
 
-\- Manage database schema changes through EF Core migrations.
+- Entity Framework Core 10.
 
-\- Build and run the API using a multi-stage Docker image.
+- Npgsql PostgreSQL provider.
 
+- Local PostgreSQL installation.
 
+- Docker Desktop with Linux containers.
 
-Authentication and authorization are not implemented yet. Run this version locally for development.
-
-
-
-\## Technology Stack
-
-
-
-\- .NET 10 and ASP.NET Core controllers.
-
-\- Entity Framework Core 10.
-
-\- Npgsql PostgreSQL provider.
-
-\- Local PostgreSQL installation.
-
-\- Docker Desktop with Linux containers.
-
-\- Visual Studio 2026.
-
-
+- Visual Studio 2026.
 
 The repository's `global.json` selects .NET SDK `10.0.402`, allowing newer patches in the same SDK feature band.
 
-
-
-\## Repository Structure
-
-
+## Repository Structure
 
 ```text
 
@@ -119,84 +97,55 @@ order-management-system/
 └── docs/
 
 ```
-
-
-
-The `tests` and `docs` folders are reserved for later work. Git does not track empty folders.
-
-
-
-\## Architecture
-
-
+## Architecture
 
 ```text
 
 HTTP client
-
-&#x20;   ↓
+   ↓
 
 ProductsController
-
-&#x20;   ↓
+   ↓
 
 IProductService → ProductService
-
-&#x20;   ↓
+   ↓
 
 IProductRepository → ProductRepository
-
-&#x20;   ↓
+   ↓
 
 ApplicationDbContext
 
-&#x20;   ↓
+   ↓
 
 PostgreSQL
 
 ```
 
+- **Domain:** business entities.
 
+- **Application:** DTOs, service workflows, and repository contracts.
 
-\- \*\*Domain:\*\* business entities.
+- **Infrastructure:** EF Core context, migrations, and repository implementation.
 
-\- \*\*Application:\*\* DTOs, service workflows, and repository contracts.
-
-\- \*\*Infrastructure:\*\* EF Core context, migrations, and repository implementation.
-
-\- \*\*API:\*\* HTTP endpoints and dependency registration.
-
-
+- **API:** HTTP endpoints and dependency registration.
 
 Stock quantities and reservations are planned responsibilities of a separate Inventory Service.
 
+## Prerequisites
 
+- Docker Desktop running Linux containers.
 
-\## Prerequisites
+- A running PostgreSQL server accessible from Docker Desktop.
 
+- PostgreSQL's `psql` client.
 
-
-\- Docker Desktop running Linux containers.
-
-\- A running PostgreSQL server accessible from Docker Desktop.
-
-\- PostgreSQL's `psql` client.
-
-\- PowerShell.
-
-
+- PowerShell.
 
 Run the following commands from the repository root.
 
-
-
-\## 1. Prepare PostgreSQL
-
-
+## 1. Prepare PostgreSQL
 
 Connect using your PostgreSQL administrator account:
-
-
 
 ```powershell
 
@@ -204,11 +153,7 @@ psql -h localhost -p 5432 -U postgres -d postgres -W
 
 ```
 
-
-
 For a fresh setup, create the application role:
-
-
 
 ```sql
 
@@ -216,11 +161,7 @@ CREATE ROLE ordermanagement\_app WITH LOGIN;
 
 ```
 
-
-
 Set its password interactively:
-
-
 
 ```text
 
@@ -228,11 +169,7 @@ Set its password interactively:
 
 ```
 
-
-
 Create the database:
-
-
 
 ```sql
 
@@ -240,11 +177,7 @@ CREATE DATABASE ordermanagement OWNER ordermanagement\_app;
 
 ```
 
-
-
 Exit:
-
-
 
 ```text
 
@@ -252,23 +185,14 @@ Exit:
 
 ```
 
-
-
 If the role and database already exist, reuse them instead of recreating them.
-
 
 
 The application role owns this local development database so it can apply migrations. Deployment permissions will be reviewed separately.
 
-
-
-\## 2. Configure the Current PowerShell Session
-
-
+## 2. Configure the Current PowerShell Session
 
 Enter the application role's password when prompted:
-
-
 
 ```powershell
 
@@ -276,15 +200,11 @@ $databasePassword = Read-Host 'Enter the password for ordermanagement\_app' -AsS
 
 ```
 
-
-
 ```powershell
 
-$databaseCredential = \[System.Management.Automation.PSCredential]::new('ordermanagement\_app', $databasePassword)
+$databaseCredential = [System.Management.Automation.PSCredential]::new('ordermanagement\_app', $databasePassword)
 
 ```
-
-
 
 ```powershell
 
@@ -292,31 +212,19 @@ $env:PGPASSWORD = $databaseCredential.GetNetworkCredential().Password
 
 ```
 
-
-
 ```powershell
 
 $env:ConnectionStrings\_\_DefaultConnection = 'Host=host.docker.internal;Port=5432;Database=ordermanagement;Username=ordermanagement\_app'
 
 ```
 
-
-
 `host.docker.internal` addresses the laptop from inside Docker Desktop. Inside a container, `localhost` addresses the container itself.
-
-
 
 Npgsql reads the password from `PGPASSWORD`. The password is temporarily available in process/container environment settings. Do not print these settings or commit credentials.
 
-
-
-\## 3. Apply Existing Migrations
-
-
+## 3. Apply Existing Migrations
 
 For a fresh database, run:
-
-
 
 ```powershell
 
@@ -324,19 +232,11 @@ docker run --rm --mount "type=bind,source=$($PWD.Path),target=/workspace" --work
 
 ```
 
-
-
 This applies the migrations committed to the repository. Do not generate another `InitialCreate` migration.
-
-
 
 Close Visual Studio while running this source-mounted command to avoid competing Windows and Linux restores of shared build metadata.
 
-
-
-\## 4. Build the Application Image
-
-
+## 4. Build the Application Image
 
 ```powershell
 
@@ -344,23 +244,13 @@ docker build --file ./src/OrderManagement.API/Dockerfile --tag order-management-
 
 ```
 
-
-
 The final `.` uses the repository root as the build context, making the referenced projects available.
-
-
 
 The Dockerfile publishes the application in an SDK stage and copies the published files into an ASP.NET runtime stage. The final container runs as a non-root user.
 
-
-
-\## 5. Run the API
-
-
+## 5. Run the API
 
 Using the credentials configured above:
-
-
 
 ```powershell
 
@@ -368,181 +258,97 @@ try { docker run --rm --name ordermanagement-api-day1 --publish 127.0.0.1:5080:8
 
 ```
 
-
-
 Leave this terminal running. Test requests from a second terminal.
-
-
 
 The API is available at `http://localhost:5080`.
 
-
-
 This local run uses the Development environment and HTTP. The image is compiled in Release configuration. Build configuration and runtime environment are separate settings.
-
-
-
 Stop the container with Ctrl+C, or from another terminal:
-
-
-
 ```powershell
-
 docker stop ordermanagement-api-day1
-
 ```
-
-
-
 The container is removed after stopping. PostgreSQL data remains in the separate local database.
 
-
-
 If setup fails before the run command, clear the temporary credentials manually:
-
-
 
 ```powershell
 
 Remove-Item Env:\\PGPASSWORD,Env:\\ConnectionStrings\_\_DefaultConnection -ErrorAction SilentlyContinue
 
 ```
-
-
-
 ```powershell
-
 Remove-Variable databasePassword,databaseCredential -ErrorAction SilentlyContinue
 
 ```
-
-
-
-\## API Endpoints
-
-
-
+## API Endpoints
 | Method | Route | Expected success response |
-
 |---|---|---|
-
 | GET | `/api/products` | `200 OK` |
-
 | GET | `/api/products/{id}` | `200 OK` |
-
 | POST | `/api/products` | `201 Created` |
-
-
-
 A missing product returns `404 Not Found`. Invalid creation input returns `400 Bad Request`.
 
-
-
-\### Create a Product
-
-
-
+### Create a Product
 ```powershell
-
 $productBody = @{ name = 'Laptop'; description = 'Development laptop'; price = 1200.00 } | ConvertTo-Json
-
 ```
-
-
-
 ```powershell
-
 $createResponse = Invoke-WebRequest -Uri 'http://localhost:5080/api/products' -Method Post -ContentType 'application/json' -Body $productBody -UseBasicParsing
 
 ```
-
-
-
 ```powershell
 
 $createResponse.StatusCode
 
 ```
 
-
-
 ```powershell
 
 $createResponse.Content
 
 ```
-
-
-
 ```powershell
 
 $createResponse.Headers\['Location']
 
 ```
-
-
-
 Each successful POST creates a new product. Repeating the request creates additional rows.
 
-
-
-\### List Products
-
-
+### List Products
 
 ```powershell
 
 Invoke-RestMethod -Uri 'http://localhost:5080/api/products'
 
 ```
-
-
-
-\### Retrieve the Created Product
-
-
+### Retrieve the Created Product
 
 ```powershell
 
 $createdProduct = $createResponse.Content | ConvertFrom-Json
 
 ```
-
-
-
 ```powershell
 
 Invoke-RestMethod -Uri "http://localhost:5080/api/products/$($createdProduct.id)"
 
 ```
 
+### Creation Rules
 
+- Name is required and limited to 200 characters.
 
-\### Creation Rules
+- Description is limited to 2,000 characters.
 
+- Price must be between `0.01` and `9999999999999999.99`.
 
-
-\- Name is required and limited to 200 characters.
-
-\- Description is limited to 2,000 characters.
-
-\- Price must be between `0.01` and `9999999999999999.99`.
-
-\- ID and creation time are supplied by the database/application.
-
-
+- ID and creation time are supplied by the database/application.
 
 These request rules are enforced through DTO validation at the API boundary.
 
-
-
-\## OpenAPI
-
-
+## OpenAPI
 
 In Development, the generated API description is available at:
-
-
 
 ```text
 
@@ -550,54 +356,37 @@ http://localhost:5080/openapi/v1.json
 
 ```
 
-
-
 Swagger UI is not currently configured.
 
-
-
-\## Verification
-
-
+## Verification
 
 Manual checks cover:
 
+- Product creation and retrieval.
+- Blank-name and negative-price rejection.
 
+- Missing-product responses.
 
-\- Product creation and retrieval.
+- Product persistence after API container restart.
 
-\- Blank-name and negative-price rejection.
-
-\- Missing-product responses.
-
-\- Product persistence after API container restart.
-
-\- Retrieval through the packaged application image.
-
-
+- Retrieval through the packaged application image.
 
 Automated unit and integration tests are planned.
 
+## Planned Work
 
+- Customers, orders, and order items.
 
-\## Planned Work
+- Authentication and role-based authorization.
 
+- Spring Boot Inventory Service.
 
+- Automated tests.
 
-\- Customers, orders, and order items.
+- Structured logging and dependency health checks.
 
-\- Authentication and role-based authorization.
-
-\- Spring Boot Inventory Service.
-
-\- Automated tests.
-
-\- Structured logging and dependency health checks.
-
-\- Docker Compose configuration.
-
-\- AWS deployment, Terraform, and GitHub Actions.
-
+- Docker Compose configuration.
+- AWS deployment, Terraform, and GitHub Actions.
 
 # Day 2
 
@@ -652,7 +441,6 @@ ApplicationDbContext
    v
 PostgreSQL
 ```
-
 ### Local Configuration
 
 Create `.env.local` in the repository root, beside the solution file and
@@ -894,27 +682,6 @@ Latest verified result:
 2. Select **Test > Test Explorer**.
 3. Click **Run All Tests**.
 4. Confirm all four test cases pass.
-
-These unit tests cover service behavior. They do not verify database persistence,
-HTTP routing, or automatic API validation. Those behaviors were checked manually
-through Postman.
-
-Automated integration tests and additional validation coverage remain planned.
-
-### Day 2 Completion Checklist
-
-- [x] Existing API and PostgreSQL connectivity verified.
-- [x] Product update endpoint implemented.
-- [x] Update success and error responses verified.
-- [x] Product deletion endpoint implemented.
-- [x] Deletion success and missing-product responses verified.
-- [x] Docker Compose startup configured.
-- [x] Updated API image built and tested.
-- [x] Four ProductService unit test cases passing.
-- [ ] README updated and reviewed.
-- [ ] Credentials exclusion verified.
-- [ ] Day 2 changes committed.
-
 
 ## Day 3 - Users, Orders, and Order Items
 
@@ -1651,51 +1418,6 @@ In Visual Studio:
 3. Select **Run All Tests**.
 4. Confirm all tests pass.
 
-Record the observed result before committing the documentation.
-
-Unit tests do not verify real PostgreSQL transactions, database constraints,
-or HTTP routing. Those behaviors were checked manually. Automated integration
-tests remain planned.
-
-### Current Limitations
-
-- No authentication or role-based authorization.
-- No ownership checks restricting users to their own orders.
-- User email data is exposed by the local development Users endpoints.
-- No inventory lookup, reservation, or stock deduction.
-- No payment processing.
-- No tax, shipping, or discount calculations.
-- No order update, cancellation, or deletion endpoints.
-- No pagination on list endpoints.
-- No catalog-price locking during order creation.
-- No idempotency protection; repeating a successful POST creates another order.
-- Automated integration tests remain planned.
-
-### Day 3 Completion Checklist
-
-- [x] Day 2 baseline verified.
-- [x] User, Order, and OrderItem entities defined.
-- [x] EF Core relationships and decimal precision configured.
-- [x] AddUsersAndOrders migration applied and verified.
-- [x] Users API implemented and manually verified.
-- [x] Order creation implemented.
-- [x] Order validation and server-side totals implemented.
-- [x] Order listing and retrieval implemented.
-- [x] Purchase-time price behavior verified.
-- [x] Referenced-product deletion protection verified.
-- [x] Docker application rebuilt and manually verified.
-- [x] Order persistence after API restart verified.
-- [ ] Automated test results confirmed and recorded.
-- [ ] README reviewed against the current implementation.
-- [ ] Credentials exclusion verified.
-- [ ] Day 3 changes committed.
-- [ ] Day 3 commit pushed.
-
-### Suggested Commit Message
-
-```text
-Add users and orders APIs with price snapshots and order tests
-```
 
 ## Day 4 - Spring Boot Inventory Service
 
@@ -1928,7 +1650,7 @@ The following behaviors were verified through Postman:
 
 Restarting reconstructs the sample map. This is not database persistence.
 
-### Terraform Study
+### Terraform 
 
 Reviewed:
 
@@ -1938,19 +1660,6 @@ Reviewed:
 - Outputs for people and automation.
 - State and managed-resource identity.
 - Initialization, validation, planning, and application.
-
-No AWS resources were deployed as part of Day 4.
-
-### Current Limitations
-
-- Inventory is read-only sample data.
-- No Inventory database or JPA persistence.
-- No stock update, reservation, or release endpoints.
-- Sample IDs are not synchronized with the .NET catalog.
-- No communication between the Order API and Inventory Service.
-- No authentication or authorization.
-- No cloud deployment yet.
-
 
 ## Day 5 — Week 1 Verification and CI
 
@@ -2086,11 +1795,3 @@ It does not scale the running Inventory Service.
 - Application source, tests, Dockerfiles, Compose configuration,
   CI workflow, and Terraform configuration are version controlled.
 - Credentials must not be included in README examples or committed files.
-
-### Current Limitations
-
-- Authentication and role-based authorization are not implemented yet.
-- Inventory uses in-memory sample data.
-- Orders and Inventory are not integrated yet.
-- AWS deployment has not been implemented.
-- Terraform work so far is a local learning exercise.
