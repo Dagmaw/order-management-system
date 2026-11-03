@@ -4,7 +4,7 @@ An ASP.NET Core backend project being developed toward an AWS-hosted order manag
 
 The current implementation provides a PostgreSQL-backed Product API, organized into Domain, Application, Infrastructure, and API projects.
 
-## Current Features
+## Current Features ##
 
 - Create a product.
 
@@ -22,7 +22,7 @@ The current implementation provides a PostgreSQL-backed Product API, organized i
 
 - Build and run the API using a multi-stage Docker image.
 
-## Technology Stack
+## Technology Stack ##
 
 - .NET 10 and ASP.NET Core controllers.
 
@@ -38,7 +38,7 @@ The current implementation provides a PostgreSQL-backed Product API, organized i
 
 The repository's `global.json` selects .NET SDK `10.0.402`, allowing newer patches in the same SDK feature band.
 
-## Repository Structure
+## Repository Structure ##
 
 ```text
 
@@ -97,7 +97,7 @@ order-management-system/
 └── docs/
 
 ```
-## Architecture
+## Architecture ##
 
 ```text
 
@@ -131,7 +131,7 @@ PostgreSQL
 
 Stock quantities and reservations are planned responsibilities of a separate Inventory Service.
 
-## Prerequisites
+## Prerequisites ##
 
 - Docker Desktop running Linux containers.
 
@@ -143,7 +143,7 @@ Stock quantities and reservations are planned responsibilities of a separate Inv
 
 Run the following commands from the repository root.
 
-## 1. Prepare PostgreSQL
+## 1. Prepare PostgreSQL ##
 
 Connect using your PostgreSQL administrator account:
 
@@ -190,7 +190,7 @@ If the role and database already exist, reuse them instead of recreating them.
 
 The application role owns this local development database so it can apply migrations. Deployment permissions will be reviewed separately.
 
-## 2. Configure the Current PowerShell Session
+## 2. Configure the Current PowerShell Session ##
 
 Enter the application role's password when prompted:
 
@@ -222,7 +222,7 @@ $env:ConnectionStrings\_\_DefaultConnection = 'Host=host.docker.internal;Port=54
 
 Npgsql reads the password from `PGPASSWORD`. The password is temporarily available in process/container environment settings. Do not print these settings or commit credentials.
 
-## 3. Apply Existing Migrations
+## 3. Apply Existing Migrations ##
 
 For a fresh database, run:
 
@@ -236,7 +236,7 @@ This applies the migrations committed to the repository. Do not generate another
 
 Close Visual Studio while running this source-mounted command to avoid competing Windows and Linux restores of shared build metadata.
 
-## 4. Build the Application Image
+## 4. Build the Application Image ##
 
 ```powershell
 
@@ -248,7 +248,7 @@ The final `.` uses the repository root as the build context, making the referenc
 
 The Dockerfile publishes the application in an SDK stage and copies the published files into an ASP.NET runtime stage. The final container runs as a non-root user.
 
-## 5. Run the API
+## 5. Run the API ##
 
 Using the credentials configured above:
 
@@ -280,7 +280,7 @@ Remove-Item Env:\\PGPASSWORD,Env:\\ConnectionStrings\_\_DefaultConnection -Error
 Remove-Variable databasePassword,databaseCredential -ErrorAction SilentlyContinue
 
 ```
-## API Endpoints
+## API Endpoints ##
 | Method | Route | Expected success response |
 |---|---|---|
 | GET | `/api/products` | `200 OK` |
@@ -288,7 +288,7 @@ Remove-Variable databasePassword,databaseCredential -ErrorAction SilentlyContinu
 | POST | `/api/products` | `201 Created` |
 A missing product returns `404 Not Found`. Invalid creation input returns `400 Bad Request`.
 
-### Create a Product
+### Create a Product ##
 ```powershell
 $productBody = @{ name = 'Laptop'; description = 'Development laptop'; price = 1200.00 } | ConvertTo-Json
 ```
@@ -314,14 +314,14 @@ $createResponse.Headers\['Location']
 ```
 Each successful POST creates a new product. Repeating the request creates additional rows.
 
-### List Products
+### List Products ###
 
 ```powershell
 
 Invoke-RestMethod -Uri 'http://localhost:5080/api/products'
 
 ```
-### Retrieve the Created Product
+### Retrieve the Created Product ###
 
 ```powershell
 
@@ -334,7 +334,7 @@ Invoke-RestMethod -Uri "http://localhost:5080/api/products/$($createdProduct.id)
 
 ```
 
-### Creation Rules
+### Creation Rules ###
 
 - Name is required and limited to 200 characters.
 
@@ -346,7 +346,7 @@ Invoke-RestMethod -Uri "http://localhost:5080/api/products/$($createdProduct.id)
 
 These request rules are enforced through DTO validation at the API boundary.
 
-## OpenAPI
+## OpenAPI ##
 
 In Development, the generated API description is available at:
 
@@ -358,7 +358,7 @@ http://localhost:5080/openapi/v1.json
 
 Swagger UI is not currently configured.
 
-## Verification
+## Verification ##
 
 Manual checks cover:
 
@@ -373,7 +373,7 @@ Manual checks cover:
 
 Automated unit and integration tests are planned.
 
-## Planned Work
+## Planned Work ##
 
 - Customers, orders, and order items.
 
@@ -388,11 +388,11 @@ Automated unit and integration tests are planned.
 - Docker Compose configuration.
 - AWS deployment, Terraform, and GitHub Actions.
 
-# Day 2
+# Day 2 #
 
-## Day 2 - Product Updates, Deletion, and Automated Tests
+## Day 2 - Product Updates, Deletion, and Automated Tests ##
 
-### Completed Work
+### Completed Work ###
 
 - Added product updates through the controller, service, and repository layers.
 - Added product deletion through the same layers.
@@ -404,7 +404,7 @@ Automated unit and integration tests are planned.
 - Created the `OrderManagement.Application.Tests` xUnit project.
 - Added four passing ProductService unit test cases.
 
-### Local Architecture
+### Local Architecture ###
 
 The API runs in Docker. PostgreSQL runs directly on the Windows computer.
 
@@ -441,7 +441,7 @@ ApplicationDbContext
    v
 PostgreSQL
 ```
-### Local Configuration
+### Local Configuration ###
 
 Create `.env.local` in the repository root, beside the solution file and
 `compose.yaml`.
@@ -468,7 +468,7 @@ Ensure both `.gitignore` and `.dockerignore` contain:
 
 A new clone requires its own local `.env.local` file.
 
-### Docker Compose Configuration
+### Docker Compose Configuration ###
 
 The repository root contains `compose.yaml`:
 
@@ -488,7 +488,7 @@ services:
 PostgreSQL is not managed by this Compose configuration. The existing local
 PostgreSQL server must be running.
 
-### Start the Application
+### Start the Application ###
 
 Start Docker Desktop, then run the following from the repository root:
 
@@ -535,7 +535,7 @@ docker compose up -d --build
 
 Building in Visual Studio alone does not update the running Docker image.
 
-### Product Endpoints
+### Product Endpoints ###
 
 | Method | Route | Successful response | Other expected responses |
 |---|---|---|---|
@@ -545,7 +545,7 @@ Building in Visual Studio alone does not update the running Docker image.
 | PUT | `/api/products/{id}` | `200 OK` | `400 Bad Request`, `404 Not Found` |
 | DELETE | `/api/products/{id}` | `204 No Content` | `404 Not Found` |
 
-### Update a Product
+### Update a Product ###
 
 Use Postman to send:
 
@@ -577,7 +577,7 @@ Expected behavior:
 
 The PUT request supplies all editable fields.
 
-### Delete a Product
+### Delete a Product ###
 
 Use Postman to send:
 
@@ -597,7 +597,7 @@ Expected behavior:
 
 Use a dedicated test product when verifying deletion.
 
-### Postman Organization
+### Postman Organization ###
 
 Collection:
 
@@ -623,7 +623,7 @@ Users and Orders folders are reserved for later implementation.
 The API currently requires no HTTP authentication. Database credentials belong
 in the API configuration, not in Postman authorization settings.
 
-### Manual Verification Results
+### Manual Verification Results ###
 
 The following checks passed:
 
@@ -641,7 +641,7 @@ The following checks passed:
 | List products after deletion | Deleted product absent; other products remain |
 | Delete the product again | `404 Not Found` |
 
-### Automated Unit Tests
+### Automated Unit Tests ###
 
 Test project:
 
@@ -676,16 +676,16 @@ Latest verified result:
 0 skipped
 ```
 
-#### Run Tests in Visual Studio
+#### Run Tests in Visual Studio ####
 
 1. Open the solution.
 2. Select **Test > Test Explorer**.
 3. Click **Run All Tests**.
 4. Confirm all four test cases pass.
 
-## Day 3 - Users, Orders, and Order Items
+## Day 3 - Users, Orders, and Order Items ##
 
-### Overview
+### Overview ###
 
 Day 3 extends the Order Management System with basic user management and
 order processing.
@@ -709,7 +709,7 @@ The application now supports:
 Authentication, authorization, inventory reservation, and payment processing
 are not implemented. Run this application locally for development.
 
-### Technology Stack
+### Technology Stack ###
 
 - .NET 10 and ASP.NET Core controllers.
 - Entity Framework Core.
@@ -721,7 +721,7 @@ are not implemented. Run this application locally for development.
 - Postman for manual API verification.
 - pgAdmin for database inspection.
 
-### Project Structure
+### Project Structure ###
 
 ```text
 order-management-system/
@@ -782,7 +782,7 @@ order-management-system/
 
 Existing Product DTOs and interfaces are omitted from this abbreviated tree.
 
-### Architecture and Responsibilities
+### Architecture and Responsibilities ###
 
 ```text
 Postman
@@ -814,23 +814,23 @@ PostgreSQL
 | API | Handles HTTP requests, dependency registration, and HTTP responses |
 | Tests | Verifies service behavior using controlled repository replacements |
 
-### Object-Oriented Design
+### Object-Oriented Design ###
 
-#### Classes and Objects
+#### Classes and Objects ####
 
 Entities represent application concepts.
 
 For example, `Order` is a class. Each `new Order()` creates an individual
 order object with its own user, items, timestamp, and total.
 
-#### Abstraction
+#### Abstraction ####
 
 Interfaces such as `IOrderService` and `IOrderRepository` define contracts.
 
 The controller uses `IOrderService` without needing to know how orders are
 validated or saved.
 
-#### Encapsulation
+#### Encapsulation ####
 
 Database operations are grouped inside repositories. Order validation and
 total calculations are grouped inside the order service.
@@ -838,27 +838,27 @@ total calculations are grouped inside the order service.
 Entities currently use public setters. They are simple data models rather
 than fully encapsulated domain models.
 
-#### Composition
+#### Composition ####
 
 An Order contains a collection of OrderItems.
 
 OrderService also uses repository dependencies supplied through its
 constructor.
 
-#### Polymorphism
+#### Polymorphism ####
 
 A repository interface can be implemented by a PostgreSQL-backed repository
 or replaced by a mock during testing.
 
 The service works through the same interface in either case.
 
-#### Inheritance
+#### Inheritance ####
 
 Controllers inherit framework behavior from `ControllerBase`.
 
 Application exceptions inherit from `Exception`.
 
-#### Dependency Injection
+#### Dependency Injection ####
 
 The application registers the implementations in `Program.cs`:
 
@@ -872,7 +872,7 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 
 Existing Product registrations remain in place.
 
-### Database Model
+### Database Model ###
 
 ```text
 User
@@ -881,7 +881,7 @@ User
            └── Product
 ```
 
-#### Users
+#### Users ####
 
 | Field | Purpose |
 |---|---|
@@ -894,7 +894,7 @@ Email has a unique database index.
 
 This basic User entity does not store passwords.
 
-#### Orders
+#### Orders ####
 
 | Field | Purpose |
 |---|---|
@@ -903,7 +903,7 @@ This basic User entity does not store passwords.
 | CreatedAt | UTC creation timestamp |
 | TotalAmount | Server-calculated total, stored as `numeric(18,2)` |
 
-#### OrderItems
+#### OrderItems ####
 
 | Field | Purpose |
 |---|---|
@@ -921,7 +921,7 @@ Quantity × UnitPrice
 
 It is not stored as a separate database column.
 
-#### Relationships and Deletion Rules
+#### Relationships and Deletion Rules ####
 
 | Relationship | Rule |
 |---|---|
@@ -934,7 +934,7 @@ within one order.
 
 There is currently no public order-deletion endpoint.
 
-### Database Migration
+### Database Migration ###
 
 The following migrations have been applied:
 
@@ -981,7 +981,7 @@ Users
 __EFMigrationsHistory
 ```
 
-### Docker Compose Configuration
+### Docker Compose Configuration ###
 
 The API runs in Docker. PostgreSQL runs directly on Windows.
 
@@ -1016,8 +1016,8 @@ keeps it out of normal application startup.
 The `day3` tag identifies the local application image. Rebuilding replaces the
 image associated with that tag.
 
-### Local Credentials
-
+### Local Credentials ###
+ 
 Create `.env.local` in the repository root:
 
 ```dotenv
@@ -1043,7 +1043,7 @@ Both `.gitignore` and `.dockerignore` must exclude:
 Do not place the actual password in source code, the Dockerfile, Compose
 configuration, README examples, or Postman requests.
 
-### Start, Stop, and Inspect the Application
+### Start, Stop, and Inspect the Application ###
 
 Run commands from the repository root.
 
@@ -1090,7 +1090,7 @@ The separate Windows PostgreSQL database remains intact.
 After source changes, use `up -d --build api`. Restarting alone does not package
 new source code.
 
-### Apply Existing Migrations Through Compose
+### Apply Existing Migrations Through Compose ###
 
 For a database that needs the migrations already committed to this repository,
 use the SDK tools service.
@@ -1108,7 +1108,7 @@ generate a new migration.
 The command requires the database, application role, and `.env.local`
 configuration to exist.
 
-### Users API
+### Users API ###
 
 | Method | Route | Success | Expected errors |
 |---|---|---|---|
@@ -1116,7 +1116,7 @@ configuration to exist.
 | GET | `/api/users` | `200 OK` | |
 | GET | `/api/users/{id}` | `200 OK` | `404` |
 
-#### Create a User
+#### Create a User ####
 
 ```http
 POST http://localhost:5080/api/users
@@ -1143,7 +1143,7 @@ User creation:
 The service checks for existing emails. The database unique index provides
 the final protection against simultaneous duplicate requests.
 
-#### Retrieve Users
+#### Retrieve Users ####
 
 ```http
 GET http://localhost:5080/api/users
@@ -1157,7 +1157,7 @@ Replace `{id}` with an actual user ID.
 
 A missing user returns `404 Not Found`.
 
-### Orders API
+### Orders API ###
 
 | Method | Route | Success | Expected errors |
 |---|---|---|---|
@@ -1165,7 +1165,7 @@ A missing user returns `404 Not Found`.
 | GET | `/api/orders` | `200 OK` | |
 | GET | `/api/orders/{id}` | `200 OK` | `404` |
 
-#### Create an Order
+#### Create an Order ####
 
 ```http
 POST http://localhost:5080/api/orders
@@ -1201,7 +1201,7 @@ The client supplies:
 Prices and totals are determined by the server. They are not accepted as
 client-controlled order values.
 
-#### Order Validation
+#### Order Validation ####
 
 An order must satisfy these rules:
 
@@ -1218,7 +1218,7 @@ Invalid order requests return `400 Bad Request`.
 If a referenced user or product disappears between validation and saving,
 the repository translates the foreign-key failure into `409 Conflict`.
 
-#### Price Calculation
+#### Price Calculation ####
 
 For products priced at `25.00` and `10.00`:
 
@@ -1236,7 +1236,7 @@ saved unit price or total.
 
 The current total excludes taxes, shipping, and discounts.
 
-#### Saving an Order
+#### Saving an Order ####
 
 The repository adds the Order and its Items, then calls `SaveChangesAsync`
 once.
@@ -1247,7 +1247,7 @@ saved order.
 Catalog reads occur before that save transaction. This version does not lock
 catalog prices or reserve inventory.
 
-#### Retrieve Orders
+#### Retrieve Orders ####
 
 ```http
 GET http://localhost:5080/api/orders
@@ -1261,7 +1261,7 @@ Responses contain the order's user ID, timestamp, total, and item details.
 
 Missing order IDs return `404 Not Found`.
 
-### Product Deletion and Order History
+### Product Deletion and Order History ###
 
 Product deletion now has these outcomes:
 
@@ -1294,7 +1294,7 @@ Example:
 
 The actual response also includes framework-generated fields.
 
-### Postman Collection
+### Postman Collection ###
 
 ```text
 Order Management API
@@ -1335,7 +1335,7 @@ http://localhost:5080
 
 No HTTP authentication is required in this local development version.
 
-### Manual Verification
+### Manual Verification ###
 
 Day 3 verification covers:
 
@@ -1356,7 +1356,7 @@ Day 3 verification covers:
 
 Rejected order requests must not create additional Orders or OrderItems.
 
-#### Inspect a Saved Order in pgAdmin
+#### Inspect a Saved Order in pgAdmin ####
 
 Replace `100` with the actual order ID:
 
@@ -1378,7 +1378,7 @@ WHERE "OrderId" = 100
 ORDER BY "ProductId";
 ```
 
-### Automated Tests
+### Automated Tests ###
 
 Test project:
 
@@ -1391,7 +1391,7 @@ The existing ProductService tests use a stub repository.
 OrderService tests use Moq repository replacements and do not require
 PostgreSQL or Docker.
 
-#### OrderService Coverage
+#### OrderService Coverage ####
 
 - Calculates totals across multiple products.
 - Copies purchase-time unit prices into order items.
@@ -1409,7 +1409,7 @@ parameterized quantity cases.
 Together with the four existing ProductService cases, the expected total is
 13, unless additional tests have been added.
 
-#### Run Tests
+#### Run Tests ####
 
 In Visual Studio:
 
@@ -1419,9 +1419,9 @@ In Visual Studio:
 4. Confirm all tests pass.
 
 
-## Day 4 - Spring Boot Inventory Service
+## Day 4 - Spring Boot Inventory Service ##
 
-### Completed Work
+### Completed Work ###
 
 - Created a separate Java/Spring Boot Inventory Service.
 - Added inventory lookup using immutable sample data.
@@ -1434,7 +1434,7 @@ In Visual Studio:
 - Reviewed Terraform providers, resources, variables, outputs, state,
   and the init/validate/plan/apply workflow.
 
-### Technology Stack
+### Technology Stack ###
 
 | Component | Configuration |
 |---|---|
@@ -1447,7 +1447,7 @@ In Visual Studio:
 | Local orchestration | Docker Compose |
 | Manual API testing | Postman |
 
-### Project Location
+### Project Location ###
 
 ```text
 services/inventory-service
@@ -1456,7 +1456,7 @@ services/inventory-service
 The Java project is managed through Maven and IntelliJ.
 The existing .NET projects remain managed through the solution file.
 
-### Local Architecture
+### Local Architecture ###
 
 ```text
 Postman
@@ -1469,7 +1469,7 @@ Postman
 The services run independently. The .NET API does not call the Inventory
 Service yet.
 
-### Inventory Application Structure
+### Inventory Application Structure ###
 
 ```text
 com.dagmawi.inventory
@@ -1487,7 +1487,7 @@ com.dagmawi.inventory
     └── InMemoryInventoryService
 ```
 
-### Object-Oriented Design
+### Object-Oriented Design ###
 
 - **Abstraction:** InventoryService defines the lookup contract.
 - **Encapsulation:** InMemoryInventoryService hides its private sample map.
@@ -1501,7 +1501,7 @@ com.dagmawi.inventory
 HTTP responsibilities remain in the controller and exception handler.
 Inventory lookup behavior remains in the service.
 
-### Sample Inventory
+### Sample Inventory ###
 
 | Product ID | Available quantity |
 |---|---:|
@@ -1514,7 +1514,7 @@ These fixtures are independent of the .NET Products table.
 A product with zero stock exists and returns a successful lookup.
 An unknown product returns a not-found response.
 
-### Inventory Endpoint
+### Inventory Endpoint ###
 
 ```http
 GET http://localhost:5081/api/inventory/{productId}
@@ -1535,7 +1535,7 @@ Response: `200 OK`
 }
 ```
 
-### Error Handling
+### Error Handling ###
 
 | Input | Expected response |
 |---|---|
@@ -1560,7 +1560,7 @@ Example not-found response fields:
 
 Additional framework-generated fields may be present.
 
-### Run Tests Locally
+### Run Tests Locally ###
 
 From the Inventory project directory:
 
@@ -1589,7 +1589,7 @@ Coverage includes:
 - Structured not-found responses.
 - Invalid path-variable handling.
 
-### Docker Build
+### Docker Build ###
 
 The multi-stage Dockerfile:
 
@@ -1606,7 +1606,7 @@ Image tag:
 inventory-service:day4
 ```
 
-### Start Inventory Through Compose
+### Start Inventory Through Compose ###
 
 Run from the repository root:
 
@@ -1637,7 +1637,7 @@ Windows port 5081 maps to port 8080 inside the Inventory container.
 After source changes, rebuild the image. Restarting alone does not
 package changed source code.
 
-### Manual Verification
+### Manual Verification ###
 
 The following behaviors were verified through Postman:
 
@@ -1650,7 +1650,7 @@ The following behaviors were verified through Postman:
 
 Restarting reconstructs the sample map. This is not database persistence.
 
-### Terraform 
+### Terraform ###
 
 Reviewed:
 
@@ -1661,9 +1661,9 @@ Reviewed:
 - State and managed-resource identity.
 - Initialization, validation, planning, and application.
 
-## Day 5 — Week 1 Verification and CI
+## Day 5 — Week 1 Verification and CI ##
 
-### Completed Work
+### Completed Work ###
 
 - Ran the .NET automated tests successfully.
 - Ran the Spring Boot automated tests successfully.
@@ -1674,7 +1674,7 @@ Reviewed:
 - Confirmed both CI jobs passed on GitHub.
 - Practiced the Terraform workflow locally through Docker Compose.
 
-### Local Services
+### Local Services ###
 
 | Service | Local URL | Storage |
 |---|---|---|
@@ -1687,7 +1687,7 @@ the connection settings supplied through `.env.local`.
 The Inventory Service currently uses sample inventory data.
 It does not yet persist inventory to a database or integrate with Orders.
 
-### API Verification
+### API Verification ###
 
 | Area | Scenario | Expected result |
 |---|---|---|
@@ -1713,7 +1713,7 @@ It does not yet persist inventory to a database or integrate with Orders.
 Order prices and totals are calculated on the server.
 Order items retain the product price recorded when the order was created.
 
-### Start the Application Services
+### Start the Application Services ###
 
 Run from the repository root:
 
@@ -1725,7 +1725,7 @@ docker compose ps
 Local PostgreSQL must be available, and `.env.local` must contain
 the required API configuration before startup.
 
-### Continuous Integration
+### Continuous Integration ###
 
 Workflow file:
 
@@ -1749,7 +1749,7 @@ Both jobs passed during Week 1 verification.
 This workflow builds and tests the applications.
 Deployment automation is planned for later work.
 
-### Terraform Learning Exercise
+### Terraform Learning Exercise ###
 
 Configuration location:
 
@@ -1788,7 +1788,7 @@ Verified learning outcomes:
 The replica value is learning data stored in Terraform state.
 It does not scale the running Inventory Service.
 
-### Configuration and Git Hygiene
+### Configuration and Git Hygiene ###
 
 - `.env.local` is excluded from Git.
 - Terraform state, saved plans, and working directories are excluded from Git.
