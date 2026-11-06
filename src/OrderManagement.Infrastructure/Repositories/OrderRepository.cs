@@ -34,6 +34,19 @@ namespace OrderManagement.Infrastructure.Repositories
             return order;
         }
 
+        public async Task<IReadOnlyList<Order>> GetByUserIdAsync(
+            int userId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _db.Orders
+                .AsNoTracking()
+                .Where(o => o.UserId == userId)
+                .Include(o => o.Items)
+                .OrderByDescending(o => o.CreatedAt)
+                .ThenByDescending(o => o.Id)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<IReadOnlyList<Order>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _db.Orders

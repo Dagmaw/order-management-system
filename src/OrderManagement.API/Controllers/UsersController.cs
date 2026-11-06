@@ -2,9 +2,12 @@
 using OrderManagement.Application.DTOs;
 using OrderManagement.Application.Exceptions;
 using OrderManagement.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using OrderManagement.API.Security;
 
 namespace OrderManagement.API.Controllers;
 
+[Authorize(Roles = "Customer, Admin")]
 [ApiController]
 [Route("api/users")]
 public class UsersController : ControllerBase
@@ -16,6 +19,7 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<UserDto>>> GetUsersAsync(
         CancellationToken cancellationToken)
@@ -31,18 +35,27 @@ public class UsersController : ControllerBase
         int id,
         CancellationToken cancellationToken)
     {
+        if (!User.IsInRole("Admin"))
+        {
+            if (!User.TryGetDomainUserId(out var currentUserId))
+            {
+                return Forbid();
+            }
+
+            if (id != currentUserId)
+            {
+                return NotFound();
+            }
+        }
+
         var user = await _userService.GetUserByIdAsync(
             id,
             cancellationToken);
 
-        if (user is null)
-        {
-            return NotFound();
-        }
-
-        return Ok(user);
+        return user is null ? NotFound() : Ok(user);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<UserDto>> CreateUserAsync(
         [FromBody] CreateUserDto dto,

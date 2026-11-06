@@ -9,5 +9,9 @@ namespace OrderManagement.Application.Interfaces
         Task<OrderDto?> GetOrderByIdAsync(int Id, CancellationToken cancellationToken = default);
         
         Task<IReadOnlyList<OrderDto>> GetOrdersAsync(CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<OrderDto>> GetOrdersByUserIdAsync(
+            int userId,
+            CancellationToken cancellationToken = default);
     }
 }

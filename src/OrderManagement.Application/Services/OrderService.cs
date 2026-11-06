@@ -119,6 +119,18 @@ namespace OrderManagement.Application.Services
 
             return orders.Select(ToDto).ToList();
         }
+
+        public async Task<IReadOnlyList<OrderDto>> GetOrdersByUserIdAsync(
+            int userId,
+            CancellationToken cancellationToken = default)
+        {
+            var orders = await _orderRepository.GetByUserIdAsync(
+                userId,
+                cancellationToken);
+
+            return orders.Select(ToDto).ToList();
+        }
+
         private static OrderDto ToDto(Order order)
         {
             return new OrderDto

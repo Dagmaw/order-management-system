@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using OrderManagement.Application.Exceptions;
-
-using OrderManagement.Application.Exceptions;
 using OrderManagement.Application.Interfaces;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Infrastructure.Data;
@@ -23,7 +21,7 @@ namespace OrderManagement.Infrastructure.Repositories
         {
             ArgumentNullException.ThrowIfNull(user);
 
-            _db.Users.Add(user);
+            _db.DomainUsers.Add(user);
 
             try
             {
@@ -43,12 +41,12 @@ namespace OrderManagement.Infrastructure.Repositories
 
         public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken)
         {
-            return await _db.Users.AnyAsync(u => u.Email == email, cancellationToken);
+            return await _db.DomainUsers.AnyAsync(u => u.Email == email, cancellationToken);
         }
 
         public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken)
         {
-            return await _db.Users
+            return await _db.DomainUsers
                 .AsAsyncEnumerable()
                 .OrderBy(u => u.Name)
                 .ThenBy(user => user.Id)
@@ -57,7 +55,7 @@ namespace OrderManagement.Infrastructure.Repositories
 
         public async Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _db.Users
+            return await _db.DomainUsers
                 .AsNoTracking()
                 .SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
         }

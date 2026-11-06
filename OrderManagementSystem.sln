@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.11.12315.225 stable
+VisualStudioVersion = 18.11.12315.225
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderManagement.API", "src\OrderManagement.API\OrderManagement.API.csproj", "{B6D49C11-4A89-4168-B5B4-EC780E3F15DD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderManagement.Application.Tests", "tests\OrderManagement.Application.Tests\OrderManagement.Application.Tests.csproj", "{D8DB09DD-00E8-45E1-900F-DEBEB57001B5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderManagement.API.Tests", "tests\OrderManagement.API.Tests\OrderManagement.API.Tests.csproj", "{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,6 +87,18 @@ Global
 		{D8DB09DD-00E8-45E1-900F-DEBEB57001B5}.Release|x64.Build.0 = Release|Any CPU
 		{D8DB09DD-00E8-45E1-900F-DEBEB57001B5}.Release|x86.ActiveCfg = Release|Any CPU
 		{D8DB09DD-00E8-45E1-900F-DEBEB57001B5}.Release|x86.Build.0 = Release|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Debug|x64.Build.0 = Debug|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Debug|x86.Build.0 = Debug|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Release|x64.ActiveCfg = Release|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Release|x64.Build.0 = Release|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Release|x86.ActiveCfg = Release|Any CPU
+		{D18A6F5B-21FE-4268-9466-6EF40FBFFCBA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

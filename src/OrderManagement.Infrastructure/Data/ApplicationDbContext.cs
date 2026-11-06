@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderManagement.Domain.Entities;
 using System.Data;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using OrderManagement.Infrastructure.Identity;
 
 namespace OrderManagement.Infrastructure.Data
 
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
             : base(options)
@@ -14,7 +16,7 @@ namespace OrderManagement.Infrastructure.Data
 
         public DbSet<Product> Products => Set<Product>();
 
-        public DbSet<User> Users => Set<User>();
+        public DbSet<User> DomainUsers => Set<User>();
 
         public DbSet<Order> Orders => Set<Order>();
 
@@ -25,6 +27,19 @@ namespace OrderManagement.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+
+            var account = modelBuilder.Entity<ApplicationUser>();
+
+            account.HasOne(a => a.User)
+                .WithOne()
+                .HasForeignKey<ApplicationUser>(a => a.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            account.HasIndex(account => account.UserId)
+                .IsUnique();
+
+            account.HasIndex(a => a.NormalizedEmail)
+                .IsUnique();
 
             // Products
             var product = modelBuilder.Entity<Product>();
