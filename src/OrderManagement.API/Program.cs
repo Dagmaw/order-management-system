@@ -1,13 +1,9 @@
 using System.Buffers.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-
 using OrderManagement.Application.Interfaces;
-
 using OrderManagement.Application.Services;
-
 using OrderManagement.Infrastructure.Data;
-
 using OrderManagement.Infrastructure.Repositories;
 using OrderManagement.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -15,8 +11,24 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using FluentValidation;
+using OrderManagement.Application.Validators;
+using OrderManagement.API.ExceptionHandling;
+using Serilog;
+using Serilog.Formatting.Compact;
+using OrderManagement.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSerilog((services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Application", "OrderManagement.API")
+        .WriteTo.Console(new RenderedCompactJsonFormatter());
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(
     (serviceProvider, options) =>
@@ -139,6 +151,13 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddValidatorsFromAssemblyContaining<
+    CreateProductDtoValidator>();
+
+builder.Services.AddProblemDetails();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 
 var app = builder.Build();
 
@@ -202,11 +221,18 @@ await using (var scope = app.Services.CreateAsyncScope())
     }
 }
 
-// Configure the HTTP request pipeline.
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+app.UseSerilogRequestLogging();
+
+app.UseExceptionHandler();
+
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
@@ -214,6 +240,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

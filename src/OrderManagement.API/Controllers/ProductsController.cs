@@ -3,8 +3,8 @@
 using OrderManagement.Application.DTOs;
 
 using OrderManagement.Application.Interfaces;
-using OrderManagement.Application.Exceptions;
 using Microsoft.AspNetCore.Authorization;
+using FluentValidation;
 
 namespace OrderManagement.API.Controllers
 {
@@ -35,43 +35,89 @@ namespace OrderManagement.API.Controllers
             }
             return Ok(product);
         }
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<ProductDto>> CreateProductAsync([FromBody] CreateProductDto dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<ProductDto>> CreateProductAsync(
+            [FromBody] CreateProductDto dto,
+            [FromServices] IValidator<CreateProductDto> validator,
+            CancellationToken cancellationToken)
         {
-            var product = await _productService.CreateProductAsync(dto, cancellationToken);
-            return CreatedAtRoute("GetProductById", new { id = product.Id }, product);
+            var validation = await validator.ValidateAsync(
+                dto,
+                cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                foreach (var error in validation.Errors)
+                {
+                    ModelState.AddModelError(
+                        error.PropertyName,
+                        error.ErrorMessage);
+                }
+
+                return ValidationProblem(ModelState);
+            }
+
+            var product = await _productService.CreateProductAsync(
+                dto,
+                cancellationToken);
+
+            return CreatedAtRoute(
+                "GetProductById",
+                new { id = product.Id },
+                product);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateProductAsync(int id, [FromBody] UpdateProductDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateProductAsync(
+            int id,
+            [FromBody] UpdateProductDto dto,
+            [FromServices] IValidator<UpdateProductDto> validator,
+            CancellationToken cancellationToken)
         {
-            var product = await _productService.UpdateProductAsync(id, dto, cancellationToken);
-            if (product == null)
+            var validation = await validator.ValidateAsync(
+                dto,
+                cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                foreach (var error in validation.Errors)
+                {
+                    ModelState.AddModelError(
+                        error.PropertyName,
+                        error.ErrorMessage);
+                }
+
+                return ValidationProblem(ModelState);
+            }
+
+            var product = await _productService.UpdateProductAsync(
+                id,
+                dto,
+                cancellationToken);
+
+            if (product is null)
             {
                 return NotFound();
             }
+
             return Ok(product);
         }
+
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteProductAsync(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteProductAsync(
+            int id,
+            CancellationToken cancellationToken)
         {
-            try
-            {
+            var deleted = await _productService.DeleteProductAsync(
+                id,
+                cancellationToken);
 
-                var deleted = await _productService.DeleteProductAsync(id, cancellationToken);
-                return deleted ? NoContent() : NotFound();  
-            }
-            catch (DataConflictException ex)
-            {
-                return Problem(
-                    statusCode: StatusCodes.Status409Conflict,
-                    title: "Product is referenced by an order",
-                    detail: ex.Message);
-            }
-        }   
+            return deleted ? NoContent() : NotFound();
+        }
 
     }
 }

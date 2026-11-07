@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OrderManagement.API.Security;
 using OrderManagement.Application.DTOs;
-using OrderManagement.Application.Exceptions;
 using OrderManagement.Application.Interfaces;
 
 namespace OrderManagement.API.Controllers;
@@ -114,30 +113,13 @@ public class OrderController : ControllerBase
             Items = dto.Items
         };
 
-        try
-        {
-            var order = await _orderService.CreateOrderAsync(
-                serviceDto,
-                cancellationToken);
+        var order = await _orderService.CreateOrderAsync(
+            serviceDto,
+            cancellationToken);
 
-            return CreatedAtRoute(
-                "GetOrderById",
-                new { id = order.Id },
-                order);
-        }
-        catch (OrderValidationException ex)
-        {
-            return Problem(
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "Invalid order",
-                detail: ex.Message);
-        }
-        catch (DataConflictException ex)
-        {
-            return Problem(
-                statusCode: StatusCodes.Status409Conflict,
-                title: "Order could not be saved",
-                detail: ex.Message);
-        }
+        return CreatedAtRoute(
+            "GetOrderById",
+            new { id = order.Id },
+            order);
     }
 }

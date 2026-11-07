@@ -10,6 +10,9 @@ A layered .NET Order Management API with PostgreSQL, a separate Spring Boot Inve
 - Authentication: Customer registration, JWT login, and Customer/Admin permissions.
 - Inventory: independent Spring Boot lookup endpoint using in-memory sample data.
 - Automated application tests and 11 API integration tests; .NET and Java CI jobs verified successfully.
+- Product request validation with FluentValidation.
+- Centralized Problem Details exception responses.
+- Serilog JSON logging with request correlation IDs.
 
 ## Technology Stack
 
@@ -109,8 +112,7 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 ### Part 2
 
 - [Section 6 — Authentication, Roles, and Order Ownership](docs/part-2/section-06-authentication.md)
-
-Section pages preserve the project history. Earlier examples may describe behavior before authentication was introduced; use this home page and Section 6 for current access requirements. Existing Docker image tags retain their original names.
+- [Section 7 — Validation, Error Handling, and Structured Logging](docs/part-2/section-07-validation-errors-and-logging.md)
 
 ## Testing
 
@@ -149,3 +151,4 @@ README.md              Project home
 - AWS deployment is planned. The Terraform exercise creates no AWS resources.
 - CI currently builds and tests; deployment automation is future work.
 - Earlier section instructions are milestone records rather than a replacement for current configuration.
+

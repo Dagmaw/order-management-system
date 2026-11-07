@@ -1,6 +1,6 @@
 services:
   api:
-    image: order-management-api:day6
+    image: order-management-api:section7
     build:
       context: .
       dockerfile: src/OrderManagement.API/Dockerfile

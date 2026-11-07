@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OrderManagement.Application.DTOs;
-using OrderManagement.Application.Exceptions;
 using OrderManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using OrderManagement.API.Security;
@@ -61,23 +60,13 @@ public class UsersController : ControllerBase
         [FromBody] CreateUserDto dto,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var user = await _userService.CreateUserAsync(
-                dto,
-                cancellationToken);
+        var user = await _userService.CreateUserAsync(
+            dto,
+            cancellationToken);
 
-            return CreatedAtRoute(
-                "GetUserById",
-                new { id = user.Id },
-                user);
-        }
-        catch (DuplicateEmailException ex)
-        {
-            return Problem(
-                statusCode: StatusCodes.Status409Conflict,
-                title: "Email already registered",
-                detail: ex.Message);
-        }
+        return CreatedAtRoute(
+            "GetUserById",
+            new { id = user.Id },
+            user);
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrderManagement.Application.DTOs;
-using OrderManagement.Application.Exceptions;
 using OrderManagement.Application.Interfaces;
 
 
@@ -24,38 +23,16 @@ public class AuthController : ControllerBase
         [FromBody] RegisterDto dto,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var user = await _authService.RegisterAsync(
-                dto,
-                cancellationToken);
+        var user = await _authService.RegisterAsync(
+            dto,
+            cancellationToken);
 
-            return CreatedAtRoute(
-                "GetUserById",
-                new { id = user.Id },
-                user);
-        }
-        catch (DuplicateEmailException ex)
-        {
-            return Problem(
-                statusCode: StatusCodes.Status409Conflict,
-                title: "Email already registered",
-                detail: ex.Message);
-        }
-        catch (RegistrationValidationException ex)
-        {
-            return BadRequest(
-                new ValidationProblemDetails(
-                    new Dictionary<string, string[]>
-                    {
-                        ["Registration"] = ex.Errors
-                    })
-                {
-                    Status = StatusCodes.Status400BadRequest,
-                    Title = "Registration validation failed."
-                });
-        }
+        return CreatedAtRoute(
+            "GetUserById",
+            new { id = user.Id },
+            user);
     }
+
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDto>> LoginAsync(
