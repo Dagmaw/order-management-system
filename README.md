@@ -113,6 +113,8 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 
 - [Section 6 — Authentication, Roles, and Order Ownership](docs/part-2/section-06-authentication.md)
 - [Section 7 — Validation, Error Handling, and Structured Logging](docs/part-2/section-07-validation-errors-and-logging.md)
+- [Section 8 — Inventory Persistence with PostgreSQL](docs/part-2/section-08-inventory-persistence.md)
+
 
 ## Testing
 

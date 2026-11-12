@@ -492,3 +492,6 @@ $RECYCLE.BIN/
 .terraform.tfstate.lock.info
 crash.log
 crash.*.log
+
+
+.env.inventory.local

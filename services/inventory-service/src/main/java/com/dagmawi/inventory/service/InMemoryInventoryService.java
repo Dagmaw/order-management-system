@@ -4,9 +4,8 @@ import java.util.Map;
 import com.dagmawi.inventory.dto.InventoryResponse;
 import com.dagmawi.inventory.exception.InvalidProductIdException;
 import com.dagmawi.inventory.exception.InventoryNotFoundException;
-import org.springframework.stereotype.Service;
 
-@Service
+
 public class InMemoryInventoryService implements InventoryService {
     private final Map<Long, InventoryResponse> inventory = Map.of(
             1L, new InventoryResponse(1L, 100),

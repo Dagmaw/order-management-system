@@ -20,12 +20,14 @@ services:
       - .env.local
 
   inventory:
-    image: inventory-service:day4
+    image: inventory-service:section8
     build:
       context: ./services/inventory-service
       dockerfile: Dockerfile
     ports:
       - "127.0.0.1:5081:8080"
+    env_file:
+      - .env.inventory.local
 
   terraform:
     image: hashicorp/terraform:1.17.1
