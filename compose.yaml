@@ -30,7 +30,7 @@ services:
       - .env.inventory.local
 
   terraform:
-    image: hashicorp/terraform:1.17.1
+    image: hashicorp/terraform:1.17.2
     profiles:
       - tools
     working_dir: /workspace
