@@ -7,6 +7,11 @@ on:
       - 'infra/aws/dev/**'
       - '.github/workflows/terraform-dev.yml'
   workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply the reviewed Terraform plan
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -47,16 +52,6 @@ jobs:
         with:
           terraform_version: '1.17.2'
           terraform_wrapper: false
-
-      - name: Check GitHub OIDC claims
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl --fail --silent --show-error \
-            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" |
-            python3 -c 'import base64,json,sys; p=json.load(sys.stdin)["value"].split(".")[1]; c=json.loads(base64.urlsafe_b64decode(p + "=" * (-len(p) % 4))); print("aud:", c["aud"]); print("sub:", c["sub"])'
-
       - name: Assume the Terraform plan role
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
@@ -65,4 +60,60 @@ jobs:
       - name: Initialize the S3 backend
         run: terraform init -input=false -lockfile=readonly
       - name: Preview AWS changes
+        if: ${{ !inputs.apply }}
         run: terraform plan -input=false -lock-timeout=5m
+
+      - name: Save the plan for review and apply
+        if: ${{ inputs.apply }}
+        run: terraform plan -input=false -lock-timeout=5m -out=dev.tfplan
+
+      - name: Upload the saved plan
+        if: ${{ inputs.apply }}
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: terraform-dev-plan-${{ github.run_attempt }}
+          path: infra/aws/dev/dev.tfplan
+          retention-days: 1
+          if-no-files-found: error
+  apply:
+    name: Apply reviewed AWS changes
+    needs: plan
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.apply
+    runs-on: ubuntu-24.04
+    environment: terraform-dev
+    concurrency:
+      group: terraform-aws-dev-apply
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: '1.17.2'
+          terraform_wrapper: false
+
+      - name: Assume the Terraform apply role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Download the reviewed plan
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: terraform-dev-plan-${{ github.run_attempt }}
+          path: infra/aws/dev
+
+      - name: Initialize the S3 backend
+        run: terraform init -input=false -lockfile=readonly
+
+      - name: Apply the saved plan
+        run: terraform apply -input=false -lock-timeout=5m dev.tfplan
+
+      - name: Show the ECR repository URL
+        run: terraform output -raw ecr_repository_url
