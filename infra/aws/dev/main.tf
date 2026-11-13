@@ -9,11 +9,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "order-management-tfstate-dev-638500336727-us-east-1"
-    key            = "terraform.tfstate"
-    region         = "us-east-1"
-    encrypt        = true
-    use_lockfile     = true
+    bucket       = "order-management-tfstate-dev-638500336727-us-east-1"
+    key          = "terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true
   }
 }
 
@@ -34,5 +34,5 @@ resource "aws_ecr_repository" "order_management_api" {
 
 output "ecr_repository_url" {
   description = "Private ECR repository URL for GitHub Actions."
-  value = aws_ecr_repository.order_management_api.repository_url
+  value       = aws_ecr_repository.order_management_api.repository_url
 }
