@@ -75,6 +75,8 @@ jobs:
           path: infra/aws/dev/dev.tfplan
           retention-days: 1
           if-no-files-found: error
+    outputs:
+      artifact_name: terraform-dev-plan-${{ github.run_attempt }}
   apply:
     name: Apply reviewed AWS changes
     needs: plan
@@ -103,7 +105,7 @@ jobs:
           role-to-assume: ${{ vars.AWS_TERRAFORM_APPLY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Download the reviewed plan
+      - name: ${{ needs.plan.outputs.artifact_name }}
         uses: actions/download-artifact@v8.0.2
         with:
           name: terraform-dev-plan-${{ github.run_attempt }}
