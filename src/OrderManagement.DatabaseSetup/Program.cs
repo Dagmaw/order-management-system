@@ -20,7 +20,6 @@ try
         Username = Required("PGUSER"),
         Password = Required("PGPASSWORD"),
         SslMode = SslMode.VerifyFull,
-        SslMode = SslMode.VerifyFull,
         GssEncryptionMode = GssEncryptionMode.Disable,
         RootCertificate = rootCertificate,
         Timeout = 30,
