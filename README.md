@@ -114,6 +114,7 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 6 — Authentication, Roles, and Order Ownership](docs/part-2/section-06-authentication.md)
 - [Section 7 — Validation, Error Handling, and Structured Logging](docs/part-2/section-07-validation-errors-and-logging.md)
 - [Section 8 — Inventory Persistence with PostgreSQL](docs/part-2/section-08-inventory-persistence.md)
+- [Section 9 — AWS Deployment and Cleanup](docs/part-2/section-09-aws-deployment.md)
 
 
 ## Testing
@@ -140,8 +141,9 @@ src/                   .NET application projects
 tests/                 .NET test projects
 services/              Spring Boot Inventory Service
 infra/learning/        Local Terraform exercise
+infra/aws/dev/         AWS exercise infrastructure (destroyed)
 docs/part-1/           Sections 1–5
-docs/part-2/           Section 6
+docs/part-2/           Sections 6–9
 compose.yaml           Application and utility services
 README.md              Project home
 ```
@@ -150,7 +152,9 @@ README.md              Project home
 
 - Inventory uses sample data and does not integrate with Orders or persist to a database.
 - Authentication uses local accounts and JWTs; SSO and refresh tokens are not implemented.
-- AWS deployment is planned. The Terraform exercise creates no AWS resources.
-- CI currently builds and tests; deployment automation is future work.
+- AWS infrastructure was provisioned and later destroyed for exercise cleanup. API service, ALB, and public testing remain; see Section 9.
+- AWS automation exists; the Terraform workflow currently plans destruction. Review it before any future rebuild.
 - Earlier section instructions are milestone records rather than a replacement for current configuration.
+
+
 
