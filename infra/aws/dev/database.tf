@@ -47,10 +47,6 @@ resource "aws_db_instance" "main" {
   skip_final_snapshot     = true
   delete_automated_backups = true
 
-  # deletion_protection       = true
-  # skip_final_snapshot       = false
-  # final_snapshot_identifier = "order-management-dev-postgres-final"
-
   tags = {
     Name        = "order-management-dev-postgres"
     Project     = "order-management-system"
