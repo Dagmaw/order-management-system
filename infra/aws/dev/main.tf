@@ -24,6 +24,7 @@ provider "aws" {
 resource "aws_ecr_repository" "order_management_api" {
   name                 = "order-management-api"
   image_tag_mutability = "IMMUTABLE"
+  force_delete         = true
 
   tags = {
     Name        = "order-management-api"
