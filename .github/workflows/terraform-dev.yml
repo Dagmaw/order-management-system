@@ -59,13 +59,22 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
       - name: Initialize the S3 backend
         run: terraform init -input=false -lockfile=readonly
+      # - name: Preview AWS changes
+      #   if: ${{ !inputs.apply }}
+      #   run: terraform plan -input=false -lock-timeout=5m
+
       - name: Preview AWS changes
         if: ${{ !inputs.apply }}
-        run: terraform plan -input=false -lock-timeout=5m
+        run: terraform plan -destroy -input=false -lock-timeout=5m
+        
+
+      # - name: Save the plan for review and apply
+      #   if: ${{ inputs.apply }}
+      #   run: terraform plan -input=false -lock-timeout=5m -out=dev.tfplan
 
       - name: Save the plan for review and apply
         if: ${{ inputs.apply }}
-        run: terraform plan -input=false -lock-timeout=5m -out=dev.tfplan
+        run: terraform plan -destroy -input=false -lock-timeout=5m -out=dev.tfplan
 
       - name: Upload the saved plan
         if: ${{ inputs.apply }}
@@ -123,5 +132,5 @@ jobs:
       #- name: Check after recovery
        # run: terraform plan -input=false -lock-timeout=5m
 
-      - name: Show the ECR repository URL
-        run: terraform output -raw ecr_repository_url
+      # - name: Show the ECR repository URL
+      #   run: terraform output -raw ecr_repository_url
