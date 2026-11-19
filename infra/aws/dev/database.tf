@@ -43,9 +43,13 @@ resource "aws_db_instance" "main" {
   maintenance_window      = "sun:05:00-sun:06:00"
   copy_tags_to_snapshot   = true
 
-  deletion_protection       = true
-  skip_final_snapshot       = false
-  final_snapshot_identifier = "order-management-dev-postgres-final"
+  deletion_protection      = false
+  skip_final_snapshot      = true
+  delete_automated_backups  = true
+
+  # deletion_protection       = true
+  # skip_final_snapshot       = false
+  # final_snapshot_identifier = "order-management-dev-postgres-final"
 
   tags = {
     Name        = "order-management-dev-postgres"
