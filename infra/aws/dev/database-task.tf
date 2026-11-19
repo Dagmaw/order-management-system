@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "database_setup" {
           value = "/app/certs/global-bundle.pem"
         }
       ]
-      
+
       secrets = [
         {
           name      = "PGUSER"
