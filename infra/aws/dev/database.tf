@@ -18,10 +18,10 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "main" {
   identifier = "order-management-dev-postgres"
 
-  engine                     = "postgres"
-  engine_version             = "18"
-  instance_class             = "db.t4g.micro"
-  auto_minor_version_upgrade = true
+  engine                      = "postgres"
+  engine_version              = "18"
+  instance_class              = "db.t4g.micro"
+  auto_minor_version_upgrade  = true
   allow_major_version_upgrade = false
 
   db_name                     = "ordermanagement"
