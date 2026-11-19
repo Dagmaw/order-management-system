@@ -117,5 +117,8 @@ jobs:
       - name: Clear marker
         run: terraform untaint -lock-timeout=5m aws_secretsmanager_secret.application_database
 
+      - name: Check after recovery
+        run: terraform plan -input=false -lock-timeout=5m
+
       - name: Show the ECR repository URL
         run: terraform output -raw ecr_repository_url
