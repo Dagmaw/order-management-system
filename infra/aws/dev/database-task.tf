@@ -1,5 +1,5 @@
 locals {
-  database_setup_image = ""
+  database_setup_image = "638500336727.dkr.ecr.us-east-1.amazonaws.com/order-management-api@sha256:dd61d47685e7de54ff83e7409cdc32e5ca3ab7307d5340705db4a8595503893a"
 }
 
 resource "aws_ecs_task_definition" "database_setup" {
