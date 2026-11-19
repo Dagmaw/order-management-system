@@ -1,0 +1,73 @@
+name: Publish Database Setup Image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish database setup
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build database setup image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker build \
+            --platform linux/amd64 \
+            --file src/OrderManagement.DatabaseSetup/Dockerfile \
+            --tag database-setup:build \
+            .
+
+      - name: Assume ECR publishing role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUBLISH_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Sign Docker in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2.1.7
+
+      - name: Publish database setup image
+        shell: bash
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+        run: |
+          set -euo pipefail
+
+          image="${REGISTRY}/${REPOSITORY}"
+          tag="db-setup-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          docker tag database-setup:build "${image}:${tag}"
+          docker push "${image}:${tag}"
+
+          digest="$(aws ecr batch-get-image \
+            --repository-name "$REPOSITORY" \
+            --image-ids "imageTag=$tag" \
+            --query 'images[0].imageId.imageDigest' \
+            --output text)"
+
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+
+          {
+            printf '### Database setup image\n\n'
+            printf -- '- Tag: `%s:%s`\n' "$image" "$tag"
+            printf -- '- ECS image: `%s@%s`\n' "$image" "$digest"
+          } >> "$GITHUB_STEP_SUMMARY"
