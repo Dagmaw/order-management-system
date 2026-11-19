@@ -33,19 +33,19 @@ resource "aws_db_instance" "main" {
   storage_type      = "gp3"
   storage_encrypted = true
 
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.database.id]
-  publicly_accessible    = false
-  multi_az               = false
+  db_subnet_group_name      = aws_db_subnet_group.main.name
+  vpc_security_group_ids    = [aws_security_group.database.id]
+  publicly_accessible       = false
+  multi_az                  = false
 
-  backup_retention_period = 7
-  backup_window           = "03:00-04:00"
-  maintenance_window      = "sun:05:00-sun:06:00"
-  copy_tags_to_snapshot   = true
-
-  deletion_protection     = false
-  skip_final_snapshot     = true
-  delete_automated_backups = true
+  backup_retention_period   = 7
+  backup_window             = "03:00-04:00"
+  maintenance_window        = "sun:05:00-sun:06:00"
+  copy_tags_to_snapshot     = true
+  
+  deletion_protection       = false
+  skip_final_snapshot       = true
+  delete_automated_backups  = true
 
   tags = {
     Name        = "order-management-dev-postgres"
