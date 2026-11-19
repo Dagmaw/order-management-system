@@ -45,6 +45,10 @@ try
 
     Console.WriteLine("Database migrations completed successfully.");
 
+    await ConfigureApplicationLoginAsync(connection);
+
+    Console.WriteLine("Application login configured.");
+
     return 0;
 }
 catch (Exception exception)
@@ -72,4 +76,65 @@ static string Required(string name)
     }
 
     return value;
+}
+
+static async Task ConfigureApplicationLoginAsync(
+    NpgsqlConnectionStringBuilder settings)
+{
+    var username = Required("PGAPPUSER");
+    var password = Required("PGAPPPASSWORD");
+
+    if (username != "order_app")
+    {
+        throw new InvalidOperationException("Unexpected username.");
+    }
+
+    using var builder = new NpgsqlCommandBuilder();
+    var role = builder.QuoteIdentifier(username);
+    var database = builder.QuoteIdentifier(settings.Database!);
+    var passwordLiteral = "E'"
+        + password.Replace("\\", "\\\\").Replace("'", "''")
+        + "'";
+
+    await using var connection = new NpgsqlConnection(settings.ConnectionString);
+    await connection.OpenAsync();
+    await using var transaction = await connection.BeginTransactionAsync();
+
+    await using var exists = new NpgsqlCommand(
+        "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = @name)",
+        connection, transaction);
+    exists.Parameters.AddWithValue("name", username);
+
+    if (!(bool)(await exists.ExecuteScalarAsync())!)
+    {
+        await using var create = new NpgsqlCommand(
+            $"CREATE ROLE {role} LOGIN",
+            connection, transaction);
+        await create.ExecuteNonQueryAsync();
+    }
+
+    await using var command = new NpgsqlCommand($"""
+        ALTER ROLE {role} LOGIN PASSWORD {passwordLiteral};
+        GRANT CONNECT ON DATABASE {database} TO {role};
+        GRANT USAGE ON SCHEMA public TO {role};
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {role};
+        GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO {role};
+        REVOKE ALL ON TABLE public."__EFMigrationsHistory" FROM {role};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public
+            GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {role};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public
+            GRANT USAGE ON SEQUENCES TO {role};
+        """, connection, transaction);
+
+    await command.ExecuteNonQueryAsync();
+    await transaction.CommitAsync();
+
+    var appSettings = new NpgsqlConnectionStringBuilder(settings.ConnectionString)
+    {
+        Username = username,
+        Password = password
+    };
+
+    await using var app = new NpgsqlConnection(appSettings.ConnectionString);
+    await app.OpenAsync();
 }

@@ -1,5 +1,5 @@
 locals {
-  database_setup_image = "638500336727.dkr.ecr.us-east-1.amazonaws.com/order-management-api@sha256:93802d91b8b365bedc7562bcc82c8a19b9fb57514aa2461938c575fef7273881"
+  database_setup_image = ""
 }
 
 resource "aws_ecs_task_definition" "database_setup" {
@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "database_setup" {
           value = "/app/certs/global-bundle.pem"
         }
       ]
-
+      
       secrets = [
         {
           name      = "PGUSER"
@@ -46,6 +46,14 @@ resource "aws_ecs_task_definition" "database_setup" {
         {
           name      = "PGPASSWORD"
           valueFrom = "${aws_db_instance.main.master_user_secret[0].secret_arn}:password::"
+        },
+        {
+          name      = "PGAPPUSER"
+          valueFrom = "${aws_secretsmanager_secret.application_database.arn}:username::"
+        },
+        {
+          name      = "PGAPPPASSWORD"
+          valueFrom = "${aws_secretsmanager_secret.application_database.arn}:password::"
         }
       ]
 

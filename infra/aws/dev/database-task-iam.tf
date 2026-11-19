@@ -77,10 +77,13 @@ resource "aws_iam_role_policy" "database_setup_execution" {
         Resource = "${aws_cloudwatch_log_group.database_setup.arn}:*"
       },
       {
-        Sid      = "ReadDatabaseAdminSecret"
-        Effect   = "Allow"
-        Action   = "secretsmanager:GetSecretValue"
-        Resource = aws_db_instance.main.master_user_secret[0].secret_arn
+        Sid    = "ReadDatabaseSetupSecrets"
+        Effect = "Allow"
+        Action = "secretsmanager:GetSecretValue"
+        Resource = [
+          aws_db_instance.main.master_user_secret[0].secret_arn,
+          aws_secretsmanager_secret.application_database.arn
+        ]
       }
     ]
   })
