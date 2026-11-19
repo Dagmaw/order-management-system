@@ -1,0 +1,139 @@
+name: Run Database Setup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-setup-dev
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Apply database migrations
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: terraform-dev
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_PAGER: ""
+      CLUSTER: order-management-dev
+      TASK_DEFINITION: ${{ vars.DB_SETUP_TASK_DEFINITION_ARN }}
+      SUBNET_IDS: ${{ vars.DB_SETUP_SUBNET_IDS }}
+      SECURITY_GROUP_ID: ${{ vars.DB_SETUP_SECURITY_GROUP_ID }}
+
+    steps:
+      - name: Check required variables
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for name in AWS_REGION TASK_DEFINITION SUBNET_IDS SECURITY_GROUP_ID; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing variable: $name"
+              exit 1
+            fi
+          done
+
+      - name: Assume migration workflow role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DB_MIGRATION_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Launch migration task
+        id: launch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          network="$(jq -nc \
+            --arg subnets "$SUBNET_IDS" \
+            --arg sg "$SECURITY_GROUP_ID" \
+            '{
+              awsvpcConfiguration: {
+                subnets: ($subnets | split(",")),
+                securityGroups: [$sg],
+                assignPublicIp: "DISABLED"
+              }
+            }')"
+
+          aws ecs run-task \
+            --cluster "$CLUSTER" \
+            --task-definition "$TASK_DEFINITION" \
+            --launch-type FARGATE \
+            --platform-version "1.4.0" \
+            --count 1 \
+            --client-token "db-setup-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --network-configuration "$network" \
+            --output json > launch.json
+
+          jq -e '
+            (.failures | length) == 0 and
+            (.tasks | length) == 1
+          ' launch.json > /dev/null || {
+            jq '.failures' launch.json
+            exit 1
+          }
+
+          task_arn="$(jq -r '.tasks[0].taskArn' launch.json)"
+          echo "task_arn=$task_arn" >> "$GITHUB_OUTPUT"
+
+          printf '### Database migration task\n\n`%s`\n' \
+            "$task_arn" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wait for task to stop
+        shell: bash
+        env:
+          TASK_ARN: ${{ steps.launch.outputs.task_arn }}
+        run: |
+          set -euo pipefail
+
+          aws ecs wait tasks-stopped \
+            --cluster "$CLUSTER" \
+            --tasks "$TASK_ARN"
+
+      - name: Check migration result
+        if: ${{ always() && steps.launch.outputs.task_arn != '' }}
+        shell: bash
+        env:
+          TASK_ARN: ${{ steps.launch.outputs.task_arn }}
+        run: |
+          set -euo pipefail
+
+          aws ecs describe-tasks \
+            --cluster "$CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --output json > result.json
+
+          jq '{
+            failures,
+            tasks: [.tasks[] | {
+              lastStatus,
+              stopCode,
+              stoppedReason,
+              containers: [.containers[] | {
+                name, lastStatus, exitCode, reason
+              }]
+            }]
+          }' result.json
+
+          jq -e '
+            (.failures | length) == 0 and
+            (.tasks | length) == 1 and
+            .tasks[0].lastStatus == "STOPPED" and
+            ([.tasks[0].containers[]
+              | select(.name == "database-setup")
+              | .exitCode] == [0])
+          ' result.json > /dev/null
+
+          echo "Database migrations completed successfully." \
+            >> "$GITHUB_STEP_SUMMARY"
