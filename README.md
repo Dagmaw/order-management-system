@@ -1,6 +1,6 @@
 # Order Management System
 
-A layered .NET Order Management API with PostgreSQL, a separate Spring Boot Inventory Service, Docker Compose, and GitHub Actions build/test automation.
+A layered .NET Order Management API and a separate Spring Boot Inventory Service, both backed by PostgreSQL. The project includes Docker Compose, automated tests, GitHub Actions, and a Terraform-based AWS deployment exercise.
 
 ## Current Features
 
@@ -8,11 +8,27 @@ A layered .NET Order Management API with PostgreSQL, a separate Spring Boot Inve
 - Users: business user records linked to separate Identity login accounts.
 - Orders: server-calculated totals, purchase-time price snapshots, and ownership checks.
 - Authentication: Customer registration, JWT login, and Customer/Admin permissions.
-- Inventory: independent Spring Boot lookup endpoint using in-memory sample data.
-- Automated application tests and 11 API integration tests; .NET and Java CI jobs verified successfully.
+- Inventory: PostgreSQL-backed stock lookup through Spring Data JPA and Hibernate, with Flyway schema migrations.
+- Automated .NET service/API tests and Java service/endpoint tests.
 - Product request validation with FluentValidation.
 - Centralized Problem Details exception responses.
 - Serilog JSON logging with request correlation IDs.
+- AWS infrastructure as code: private RDS, VPC routing, ECR, ECS Fargate setup tasks, Secrets Manager, and CloudWatch logs.
+- GitHub OIDC authentication, image publishing, approved infrastructure changes, secret initialization, and database migration workflows.
+- Separate database setup program for migrations and application-login configuration.
+
+## Project Status
+
+| Area | Current state |
+|---|---|
+| Local Order API | PostgreSQL persistence, Identity/JWT, validation, and structured logging implemented |
+| Local Inventory Service | PostgreSQL persistence with JPA/Hibernate and Flyway implemented |
+| Service integration | Orders and Inventory run independently |
+| CI | .NET and Java build/test jobs configured; successful runs recorded during the exercise |
+| AWS exercise | Infrastructure and migrations were exercised, then infrastructure was intentionally destroyed to avoid ongoing cost |
+| Public AWS API | API service, ALB/HTTPS, and end-to-end public verification remain |
+
+The Terraform workflow currently generates **destroy plans**. Review it before a future rebuild. Final empty-state and outside-Terraform cleanup checks are documented in [Section 9](docs/part-2/section-09-aws-deployment.md).
 
 ## Technology Stack
 
@@ -21,10 +37,10 @@ A layered .NET Order Management API with PostgreSQL, a separate Spring Boot Inve
 | Order API | C#, .NET 10, ASP.NET Core, Entity Framework Core 10 |
 | Authentication | ASP.NET Core Identity, JWT Bearer authentication |
 | Application database | PostgreSQL with Npgsql |
-| Inventory | Java 25, Spring Boot 4.1.2, Maven Wrapper |
-| Testing | xUnit, Moq, WebApplicationFactory, in-memory SQLite, JUnit |
+| Inventory | Java 25, Spring Boot 4.1.2, Spring Data JPA, Hibernate, Flyway, Maven Wrapper |
+| Testing | xUnit, Moq, WebApplicationFactory, in-memory SQLite, JUnit, Spring Boot Test, H2 |
 | Containers and CI | Docker, Docker Compose, GitHub Actions |
-| Infrastructure learning | Terraform; local terraform_data exercise |
+| AWS infrastructure | Terraform, S3 state/locking, ECR, VPC, private RDS, ECS Fargate, Secrets Manager, CloudWatch |
 | Development tools | Visual Studio, IntelliJ IDEA, Postman, DataGrip/pgAdmin |
 
 Version details in section pages record their respective milestones; repository configuration is the source of truth for installed dependencies.
@@ -38,7 +54,8 @@ Postman / HTTP client
     │                      → Infrastructure / EF Core
     │                      → PostgreSQL on Windows host
     └── localhost:5081 → Spring Boot Inventory Service
-                           → In-memory sample inventory
+                           → Spring Data JPA / Hibernate
+                           → Inventory PostgreSQL on Windows host
 ```
 
 - **Domain:** business entities and relationships.
@@ -48,17 +65,18 @@ Postman / HTTP client
 
 The services currently run independently; Orders does not call Inventory.
 
+The AWS exercise uses a separate private RDS database and a one-off ECS database setup task. Its public API architecture and cleanup history are documented in [Section 9](docs/part-2/section-09-aws-deployment.md).
+
 ## Quick Start
 
-Run commands from the repository root. Docker Desktop must be running Linux containers, and the existing local PostgreSQL database must be available.
+Run commands from the repository root. Docker Desktop must be running Linux containers. PostgreSQL runs separately on the Windows host; provision the `ordermanagement` and `inventory` databases and their local logins using [Section 1](docs/part-1/section-01-foundation.md) and [Section 8](docs/part-2/section-08-inventory-persistence.md).
 
 1. Create your excluded `.env.local` beside `compose.yaml`. Supply your own database credentials and JWT configuration:
 
    ```dotenv
    ASPNETCORE_ENVIRONMENT=Development
    DOTNET_ENVIRONMENT=Development
-   ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=ordermanagement;Username=ordermanagement_app
-   PGPASSWORD=YOUR_DATABASE_PASSWORD
+   ConnectionStrings__DefaultConnection='Host=host.docker.internal;Port=5432;Database=ordermanagement;Username=ordermanagement_app;Password=YOUR_DATABASE_PASSWORD'
    Jwt__Issuer=OrderManagement.API
    Jwt__Audience=OrderManagement.Client
    Jwt__AccessTokenMinutes=15
@@ -66,19 +84,30 @@ Run commands from the repository root. Docker Desktop must be running Linux cont
    BootstrapAdmin__Enabled=false
    ```
 
-   Replace both placeholders before startup. The signing key must decode to at least 32 random bytes. Keep credentials and tokens out of Git. See [initial database setup](docs/part-1/section-01-foundation.md) and [authentication configuration](docs/part-2/section-06-authentication.md).
+   Replace both placeholders before startup. This illustrates a simple password; quote/escape connection-string values correctly if your password contains special characters. The signing key must decode to at least 32 random bytes. Keep credentials and tokens out of Git. See [authentication configuration](docs/part-2/section-06-authentication.md).
 
-2. Apply committed migrations to a new or outdated development database:
+2. Create the excluded `.env.inventory.local` beside `compose.yaml`:
+
+   ```dotenv
+   SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/inventory
+   SPRING_DATASOURCE_USERNAME=inventory_app
+   SPRING_DATASOURCE_PASSWORD='YOUR_LOCAL_INVENTORY_PASSWORD'
+   ```
+
+   Replace the password. Flyway creates/version-controls the Inventory schema at startup; Hibernate validates it. Follow [Section 8](docs/part-2/section-08-inventory-persistence.md) for database ownership and permissions.
+
+3. Apply committed EF Core migrations to a new or outdated Order API database. Use a login with schema-migration permissions for this operation; the runtime account may have fewer privileges:
 
    ```powershell
    docker compose run --rm tools sh -c 'dotnet tool restore --tool-manifest dotnet-tools.json && dotnet restore OrderManagementSystem.sln --force && dotnet ef database update --project src/OrderManagement.Infrastructure --startup-project src/OrderManagement.API --context ApplicationDbContext'
    ```
 
-3. Build and start both services:
+4. Build and start both services:
 
    ```powershell
    docker compose up -d --build api inventory
    docker compose ps
+   docker compose logs --tail 80 api inventory
    ```
 
 | Service | Local address |
@@ -87,6 +116,10 @@ Run commands from the repository root. Docker Desktop must be running Linux cont
 | Inventory Service | http://localhost:5081 |
 
 PostgreSQL runs separately on the Windows host. Inside Docker, `host.docker.internal` points to that host.
+
+5. Check a public product endpoint and `GET http://localhost:5081/api/inventory/1`. Inventory seed data is managed by Flyway; a product with zero stock still returns a successful lookup. See [Section 8](docs/part-2/section-08-inventory-persistence.md) for missing/invalid-ID scenarios and persistence checks.
+
+To stop the local containers, run `docker compose down`. This does not delete the separately hosted PostgreSQL databases.
 
 ## Authentication and Access
 
@@ -131,26 +164,40 @@ From `services/inventory-service`, run Java tests:
 .\mvnw.cmd clean verify
 ```
 
-The API integration suite has **11 passing tests**, verified locally and in GitHub Actions. Each test uses an isolated in-memory SQLite database, which closes with its factory. PostgreSQL-specific migrations and provider behavior require separate verification.
+The .NET tests cover service behavior, authentication, registration/login, role authorization, order ownership, validation, and error handling. API integration tests use in-memory SQLite; Java tests use the test configuration, including H2. These do not replace PostgreSQL migration and persistence verification. Test counts and outcomes should be read from the latest run rather than an older milestone count.
+
+## Automation
+
+| Workflow | Purpose |
+|---|---|
+| [Build and Test](.github/workflows/ci.yml) | .NET/Java checks; API image publishing after successful main-branch push checks |
+| [Terraform Lock](.github/workflows/terraform-lock.yml) | Provider lock-file maintenance |
+| [Terraform AWS Dev](.github/workflows/terraform-dev.yml) | Formatting, validation, planning, and approved saved-plan application; currently destroy mode |
+| [Publish Database Setup Image](.github/workflows/publish-database-setup.yml) | Build/publish the setup image and report its immutable ECS reference |
+| [Initialize Secret](.github/workflows/initialize-secret.yml) | Initialize application database credentials while preserving an existing current value |
+| [Run Database Setup](.github/workflows/run-database-setup.yml) | Launch a private Fargate setup task and verify its exit code |
+
+Publishing an image does not deploy a running API service. AWS publishing jobs require the project repository and IAM roles to exist; they can fail after cleanup until prerequisites are restored or publishing is disabled.
 
 ## Repository Structure
 
 ```text
-.github/workflows/     Build/test workflows
+.github/workflows/     CI, image publishing, Terraform, secrets, migrations
 src/                   .NET application projects
 tests/                 .NET test projects
-services/              Spring Boot Inventory Service
+services/              Spring Boot Inventory Service with JPA/Flyway
 infra/learning/        Local Terraform exercise
 infra/aws/dev/         AWS exercise infrastructure (destroyed)
 docs/part-1/           Sections 1–5
 docs/part-2/           Sections 6–9
 compose.yaml           Application and utility services
+src/OrderManagement.DatabaseSetup/  AWS migration/application-login program
 README.md              Project home
 ```
 
 ## Current Limitations
 
-- Inventory uses sample data and does not integrate with Orders or persist to a database.
+- Inventory persists to PostgreSQL but does not integrate with Orders; its initial sample rows are Flyway seed data.
 - Authentication uses local accounts and JWTs; SSO and refresh tokens are not implemented.
 - AWS infrastructure was provisioned and later destroyed for exercise cleanup. API service, ALB, and public testing remain; see Section 9.
 - AWS automation exists; the Terraform workflow currently plans destruction. Review it before any future rebuild.
