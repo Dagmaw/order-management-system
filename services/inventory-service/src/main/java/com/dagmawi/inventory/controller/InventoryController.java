@@ -18,6 +18,16 @@ public class InventoryController {
         this.inventoryService = inventoryService;
     }
 
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Look up available stock",
+            description = "Returns persisted stock for one product. This operation does not reserve stock.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Inventory found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Product ID must be positive",
+                    content = @io.swagger.v3.oas.annotations.media.Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Inventory not found",
+                    content = @io.swagger.v3.oas.annotations.media.Content)
+    })
     @GetMapping("/{productId}")
     public InventoryResponse getInventory (
           @PathVariable("productId") long productId) {

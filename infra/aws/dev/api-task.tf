@@ -43,6 +43,7 @@ resource "aws_ecs_task_definition" "api" {
 
       environment = [
         { name = "ASPNETCORE_ENVIRONMENT", value = "Production" },
+        { name = "ApiDocs__Enabled", value = "true" },
         { name = "ASPNETCORE_HTTP_PORTS", value = "8080" },
         { name = "ASPNETCORE_HTTPS_PORT", value = "443" },
         { name = "Database__UseEnvironmentVariables", value = "true" },
