@@ -65,79 +65,78 @@ jobs:
         - name: Build and run Java tests
           run: sh ./mvnw --batch-mode --no-transfer-progress clean verify
     
-    # ECR publishing disabled after AWS exercise cleanup.
-#     publish-api:
-#         name: Publish API image to ECR
-#         needs: [dotnet, inventory]
-#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-#         runs-on: ubuntu-24.04
-#         timeout-minutes: 20
-# 
-#         permissions:
-#           contents: read
-#           id-token: write
-# 
-#         concurrency:
-#           group: publish-api-${{ github.sha }}
-#           cancel-in-progress: false
-# 
-#         steps:
-#           - name: Check out the tested commit
-#             uses: actions/checkout@v7.0.1
-#             with:
-#               persist-credentials: false
-# 
-#           - name: Assume the ECR publishing role
-#             uses: aws-actions/configure-aws-credentials@v6.3.0
-#             with:
-#               role-to-assume: ${{ vars.AWS_ECR_PUBLISH_ROLE_ARN }}
-#               aws-region: ${{ vars.AWS_REGION }}
-# 
-#           - name: Sign Docker in to Amazon ECR
-#             id: ecr
-#             uses: aws-actions/amazon-ecr-login@v2.1.7
-# 
-#           - name: Build and publish the API image
-#             shell: bash
-#             env:
-#               REGISTRY: ${{ steps.ecr.outputs.registry }}
-#               REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-#             run: |
-#               set -euo pipefail
-# 
-#               image="${REGISTRY}/${REPOSITORY}"
-#               tag="$GITHUB_SHA"
-# 
-#               lookup_image() {
-#                 aws ecr batch-get-image \
-#                   --repository-name "$REPOSITORY" \
-#                   --image-ids "imageTag=$tag" \
-#                   --output json
-#               }
-# 
-#               result="$(lookup_image)"
-#               digest="$(jq -r '.images[0].imageId.imageDigest // empty' <<< "$result")"
-# 
-#               if [[ -z "$digest" ]]; then
-#                 jq -e '(.failures | length) == 1 and .failures[0].failureCode == "ImageNotFound"' \
-#                   <<< "$result" >/dev/null
-# 
-#                 docker build \
-#                   --platform linux/amd64 \
-#                   --file src/OrderManagement.API/Dockerfile \
-#                   --tag "${image}:${tag}" \
-#                   .
-# 
-#                 docker push "${image}:${tag}"
-# 
-#                 result="$(lookup_image)"
-#                 digest="$(jq -r '.images[0].imageId.imageDigest // empty' <<< "$result")"
-#               fi
-# 
-#               [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-# 
-#               {
-#                 printf '### Published API image\n\n'
-#                 printf -- '- Commit tag: `%s:%s`\n' "$image" "$tag"
-#                 printf -- '- ECS image: `%s@%s`\n' "$image" "$digest"
-#               } >> "$GITHUB_STEP_SUMMARY"
+    publish-api:
+        name: Publish API image to ECR
+        needs: [dotnet, inventory]
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
+
+        permissions:
+          contents: read
+          id-token: write
+
+        concurrency:
+          group: publish-api-${{ github.sha }}
+          cancel-in-progress: false
+
+        steps:
+          - name: Check out the tested commit
+            uses: actions/checkout@v7.0.1
+            with:
+              persist-credentials: false
+
+          - name: Assume the ECR publishing role
+            uses: aws-actions/configure-aws-credentials@v6.3.0
+            with:
+              role-to-assume: ${{ vars.AWS_ECR_PUBLISH_ROLE_ARN }}
+              aws-region: ${{ vars.AWS_REGION }}
+
+          - name: Sign Docker in to Amazon ECR
+            id: ecr
+            uses: aws-actions/amazon-ecr-login@v2.1.7
+
+          - name: Build and publish the API image
+            shell: bash
+            env:
+              REGISTRY: ${{ steps.ecr.outputs.registry }}
+              REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+            run: |
+              set -euo pipefail
+
+              image="${REGISTRY}/${REPOSITORY}"
+              tag="$GITHUB_SHA"
+
+              lookup_image() {
+                aws ecr batch-get-image \
+                  --repository-name "$REPOSITORY" \
+                  --image-ids "imageTag=$tag" \
+                  --output json
+              }
+
+              result="$(lookup_image)"
+              digest="$(jq -r '.images[0].imageId.imageDigest // empty' <<< "$result")"
+
+              if [[ -z "$digest" ]]; then
+                jq -e '(.failures | length) == 1 and .failures[0].failureCode == "ImageNotFound"' \
+                  <<< "$result" >/dev/null
+
+                docker build \
+                  --platform linux/amd64 \
+                  --file src/OrderManagement.API/Dockerfile \
+                  --tag "${image}:${tag}" \
+                  .
+
+                docker push "${image}:${tag}"
+
+                result="$(lookup_image)"
+                digest="$(jq -r '.images[0].imageId.imageDigest // empty' <<< "$result")"
+              fi
+
+              [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+
+              {
+                printf '### Published API image\n\n'
+                printf -- '- Commit tag: `%s:%s`\n' "$image" "$tag"
+                printf -- '- ECS image: `%s@%s`\n' "$image" "$digest"
+              } >> "$GITHUB_STEP_SUMMARY"
