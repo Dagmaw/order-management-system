@@ -2,6 +2,23 @@ name: Run Database Setup
 
 on:
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Database operation
+        required: true
+        default: migrate
+        type: choice
+        options:
+          - migrate
+          - grant-admin
+      admin_email:
+        description: Existing account email (grant-admin only)
+        type: string
+        required: false
+      admin_user_id:
+        description: Existing numeric user ID (grant-admin only)
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -25,6 +42,9 @@ jobs:
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       AWS_PAGER: ""
+      OPERATION: ${{ inputs.operation }}
+      ADMIN_EMAIL: ${{ inputs.admin_email }}
+      ADMIN_USER_ID: ${{ inputs.admin_user_id }}
       CLUSTER: order-management-dev
       TASK_DEFINITION: ${{ vars.DB_SETUP_TASK_DEFINITION_ARN }}
       SUBNET_IDS: ${{ vars.DB_SETUP_SUBNET_IDS }}
@@ -66,7 +86,25 @@ jobs:
               }
             }')"
 
+          if [[ "$OPERATION" != "migrate" && "$OPERATION" != "grant-admin" ]]; then
+            echo "::error::Unknown operation"
+            exit 1
+          fi
+          if [[ "$OPERATION" == "grant-admin" ]]; then
+            [[ -n "$ADMIN_EMAIL" && "$ADMIN_USER_ID" =~ ^[1-9][0-9]*$ ]] || {
+              echo "::error::Email and positive user ID are required"
+              exit 1
+            }
+          fi
+          jq -nc --arg operation "$OPERATION" --arg email "$ADMIN_EMAIL" --arg userId "$ADMIN_USER_ID" \
+            '{containerOverrides: [{name: "database-setup", environment: [
+              {name: "DB_SETUP_OPERATION", value: $operation},
+              {name: "ADMIN_EMAIL", value: $email},
+              {name: "ADMIN_USER_ID", value: $userId}
+            ]}]}' > overrides.json
+
           aws ecs run-task \
+            --overrides file://overrides.json \
             --cluster "$CLUSTER" \
             --task-definition "$TASK_DEFINITION" \
             --launch-type FARGATE \
@@ -135,5 +173,5 @@ jobs:
               | .exitCode] == [0])
           ' result.json > /dev/null
 
-          echo "Database migrations completed successfully." \
+          echo "Database setup operation completed successfully." \
             >> "$GITHUB_STEP_SUMMARY"
