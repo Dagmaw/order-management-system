@@ -1,0 +1,82 @@
+name: Initialize JWT Secret
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: initialize-jwt-dev
+  cancel-in-progress: false
+
+jobs:
+  initialize:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: terraform-dev
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Assume the initialization role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DB_MIGRATION_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Initialize JWT signing key
+        shell: python
+        env:
+          AWS_PAGER: ""
+        run: |
+          import base64
+          import json
+          import os
+          import secrets
+          import subprocess
+
+          secret_id = "order-management/dev/jwt"
+
+          def aws(operation, *arguments, value=None):
+              result = subprocess.run(
+                  ["aws", "secretsmanager", operation, *arguments,
+                   "--output", "json", "--no-cli-pager"],
+                  input=value,
+                  text=True,
+                  capture_output=True,
+              )
+              if result.returncode:
+                  # Never print captured output that might contain secret data.
+                  raise SystemExit(
+                      f"AWS {operation} failed. Check secret existence and IAM permissions."
+                  )
+              return json.loads(result.stdout)
+
+          metadata = aws("describe-secret", "--secret-id", secret_id)
+          if metadata.get("DeletedDate"):
+              raise SystemExit("The JWT secret is scheduled for deletion; review it first.")
+
+          versions = aws(
+              "list-secret-version-ids", "--secret-id", secret_id,
+              "--include-deprecated",
+          ).get("Versions", [])
+
+          if any("AWSCURRENT" in v.get("VersionStages", []) for v in versions):
+              message = "JWT signing key already exists; preserved unchanged."
+          elif versions:
+              raise SystemExit("Secret versions exist without AWSCURRENT; review before changing.")
+          else:
+              key = base64.b64encode(secrets.token_bytes(64)).decode("ascii")
+              aws(
+                  "put-secret-value", "--secret-id", secret_id,
+                  "--secret-string", "file:///dev/stdin",
+                  value=key,
+              )
+              message = "JWT signing key initialized successfully."
+
+          print(message)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write(message + "\n")
