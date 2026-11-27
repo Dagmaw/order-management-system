@@ -1,0 +1,78 @@
+name: Recover API Terraform State
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-aws-dev-apply
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: infra/aws/dev
+
+jobs:
+  recover:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: terraform-dev
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: '1.17.2'
+          terraform_wrapper: false
+
+      - name: Assume the Terraform apply role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Verify the existing service is healthy
+        shell: bash
+        env:
+          AWS_PAGER: ""
+        run: |
+          set -euo pipefail
+
+          aws ecs describe-services \
+            --cluster order-management-dev \
+            --services order-management-dev-api \
+            --output json > service-status.json
+
+          jq -e '
+            (.failures | length) == 0 and
+            (.services | length) == 1 and
+            (.services[0] | .status == "ACTIVE" and
+              .desiredCount >= 1 and
+              .runningCount == .desiredCount and
+              .pendingCount == 0 and
+              ([.deployments[] | select(.status == "PRIMARY") |
+                .rolloutState] == ["COMPLETED"]))
+          ' service-status.json > /dev/null
+
+          response="$(curl --fail --silent --show-error \
+            --connect-timeout 10 --max-time 30 \
+            https://api-dev.kaddigitalsolutions.com/health)"
+          [[ "$response" == "Healthy" ]]
+
+      - name: Initialize the existing S3 backend
+        run: terraform init -input=false -lockfile=readonly
+
+      - name: Clear only the API service tainted marker
+        run: terraform untaint -lock-timeout=5m aws_ecs_service.api
+
+      - name: Preview infrastructure after recovery
+        run: terraform plan -input=false -lock-timeout=5m -no-color
