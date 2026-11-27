@@ -2,7 +2,7 @@
 
 ## Status
 
-Prepared on 27 November 2026. The local implementation is verified in [Section 10.1](section-10-1-openapi-swagger.md). AWS deployment of the documentation is pending publication and application of the updated API image; this guide is not a claim that AWS Swagger verification has passed.
+Completed and verified on 27 November 2026 through user-provided Terraform output and AWS Swagger screenshots. The local implementation is documented in [Section 10.1](section-10-1-openapi-swagger.md). Documentation is now available over the existing HTTPS AWS hostname; application authentication and role restrictions remain enforced.
 
 This milestone enables documentation for the already deployed .NET Order API. Java Inventory remains local; deploying it to AWS is a separate milestone.
 
@@ -83,11 +83,35 @@ If documentation must be disabled, change `ApiDocs__Enabled` to `false` and appl
 
 ## 7. Completion record
 
-- [ ] Updated API image published and digest recorded.
-- [ ] Reviewed Terraform deployment applied and new task revision recorded.
-- [ ] ECS service and HTTPS health verified.
-- [ ] OpenAPI JSON and Swagger UI loaded over the AWS hostname.
-- [ ] Public request, 401, Customer 403, and Admin access verified through Swagger UI.
+- [x] Updated API image published and digest recorded below.
+- [x] Terraform apply completed: 1 added, 1 changed, 1 destroyed. The resulting task revision was not supplied; capture it from Terraform outputs/ECS for the audit record.
+- [x] Deployed API served HTTPS health successfully and answered requests; separate ECS deployment-status screenshot was not supplied.
+- [x] OpenAPI JSON and Swagger UI loaded over the AWS hostname.
+- [x] Public request, 401, Customer 403, and Admin access verified through Swagger UI.
 - [ ] Results committed without secrets.
 
+
+### Verified deployment and responses
+
+Pinned API image:
+
+```text
+638500336727.dkr.ecr.us-east-1.amazonaws.com/order-management-api@sha256:5d7ac5807863bbc0b651561413407ed6a367d3c87e53b299c4aa08b43a0719f6
+```
+
+A subsequent image was published by a Terraform-only commit; the intended Swagger-enabled image above remained pinned. Publishing does not require continually switching the deployed digest.
+
+| AWS check | Observed result |
+|---|---|
+| `/health` | Healthy |
+| `/openapi/v1.json` | Document loaded with Bearer security metadata |
+| `/swagger/index.html` | UI rendered; HTTPS AWS server selected |
+| GET `/api/products`, no token | 200; existing product returned |
+| GET `/api/auth/me`, no token | 401 |
+| POST `/api/auth/login`, Admin test account | 200; Customer and Admin roles |
+| GET `/api/auth/me`, Admin token | 200; expected account and Admin role |
+| GET `/api/users`, Admin token | 200; users list |
+| GET `/api/users`, Customer token | 403 |
+
+No passwords, access tokens, or credential-bearing Curl examples are retained in this record. AWS resources remain running as requested. Java Inventory deployment and service integration remain future milestones.
 [Back to README](../../README.md)
