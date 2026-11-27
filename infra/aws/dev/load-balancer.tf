@@ -4,7 +4,7 @@ resource "aws_lb" "api" {
   load_balancer_type = "application"
   ip_address_type    = "ipv4"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = [
+  subnets = [
     aws_subnet.main["public_a"].id,
     aws_subnet.main["public_b"].id
   ]
