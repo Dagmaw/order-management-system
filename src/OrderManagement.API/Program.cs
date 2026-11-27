@@ -115,7 +115,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+OrderManagement.API.Documentation.ApiDocumentation.AddApiDocumentation(builder.Services);
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
@@ -273,11 +273,6 @@ app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 if (!app.Environment.IsDevelopment())
 {
     // ALB health checks reach the target over HTTP.
@@ -288,6 +283,18 @@ if (!app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+if (app.Configuration.GetValue<bool?>("ApiDocs:Enabled") ?? app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("../openapi/v1.json", "Order Management API v1");
+        options.DocumentTitle = "Order Management API";
+        options.ConfigObject.PersistAuthorization = false;
+        options.ConfigObject.AdditionalItems["validatorUrl"] = null;
+    });
+}
 
 app.MapHealthChecks("/health").AllowAnonymous();
 
