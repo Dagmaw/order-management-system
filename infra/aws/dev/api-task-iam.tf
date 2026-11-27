@@ -44,9 +44,9 @@ resource "aws_iam_role_policy" "api_execution" {
         Resource = aws_ecr_repository.order_management_api.arn
       },
       {
-        Sid    = "WriteApiLogs"
-        Effect = "Allow"
-        Action = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Sid      = "WriteApiLogs"
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "${aws_cloudwatch_log_group.api.arn}:*"
       },
       {
