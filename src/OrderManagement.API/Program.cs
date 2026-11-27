@@ -1,4 +1,4 @@
-using System.Buffers.Text;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrderManagement.Application.Interfaces;
@@ -7,7 +7,7 @@ using OrderManagement.Infrastructure.Data;
 using OrderManagement.Infrastructure.Repositories;
 using OrderManagement.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Metadata;
+using Npgsql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -19,6 +19,45 @@ using Serilog.Formatting.Compact;
 using OrderManagement.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var useDatabaseEnvironment = builder.Configuration
+    .GetValue<bool>("Database:UseEnvironmentVariables");
+
+var useReverseProxy = builder.Configuration
+    .GetValue<bool>("ReverseProxy:Enabled");
+
+if (useReverseProxy)
+{
+    var trustedNetworks = builder.Configuration
+        .GetSection("ReverseProxy:KnownNetworks")
+        .Get<string[]>() ?? [];
+
+    if (trustedNetworks.Length == 0)
+    {
+        throw new InvalidOperationException(
+            "Configure trusted proxy networks before enabling the reverse proxy.");
+    }
+
+    var parsedNetworks = trustedNetworks
+        .Select(System.Net.IPNetwork.Parse)
+        .ToArray();
+
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
+        options.KnownProxies.Clear();
+        options.KnownIPNetworks.Clear();
+
+        foreach (var network in parsedNetworks)
+        {
+            options.KnownIPNetworks.Add(network);
+        }
+    });
+}
+
+builder.Services.AddHealthChecks();
 
 builder.Services.AddSerilog((services, configuration) =>
 {
@@ -36,8 +75,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(
         var configuration = serviceProvider
             .GetRequiredService<IConfiguration>();
 
-        var connectionString = configuration
-            .GetConnectionString("DefaultConnection");
+        var connectionString = useDatabaseEnvironment
+            ? BuildDatabaseConnection(configuration)
+            : configuration.GetConnectionString("DefaultConnection");
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -221,6 +261,11 @@ await using (var scope = app.Services.CreateAsyncScope())
     }
 }
 
+if (useReverseProxy)
+{
+    app.UseForwardedHeaders();
+}
+
 app.UseMiddleware<CorrelationIdMiddleware>();
 
 app.UseSerilogRequestLogging();
@@ -235,16 +280,59 @@ if (app.Environment.IsDevelopment())
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseHttpsRedirection();
+    // ALB health checks reach the target over HTTP.
+    app.UseWhen(
+        context => !context.Request.Path.Equals(new PathString("/health")),
+        branch => branch.UseHttpsRedirection());
 }
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health").AllowAnonymous();
+
 app.MapControllers();
 
 app.Run();
 
+
+static string BuildDatabaseConnection(IConfiguration configuration)
+{
+    static string Required(IConfiguration settings, string name)
+    {
+        var value = settings[name];
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new InvalidOperationException(
+                $"Required database setting '{name}' is missing.");
+        }
+
+        return value;
+    }
+
+    var rootCertificate = Required(configuration, "PGSSLROOTCERT");
+
+    if (!File.Exists(rootCertificate))
+    {
+        throw new InvalidOperationException("The RDS CA certificate file is missing.");
+    }
+
+    return new NpgsqlConnectionStringBuilder
+    {
+        Host = Required(configuration, "PGHOST"),
+        Port = 5432,
+        Database = Required(configuration, "PGDATABASE"),
+        Username = Required(configuration, "PGUSER"),
+        Password = Required(configuration, "PGPASSWORD"),
+        SslMode = SslMode.VerifyFull,
+        GssEncryptionMode = GssEncryptionMode.Disable,
+        RootCertificate = rootCertificate,
+        Timeout = 30,
+        CommandTimeout = 30,
+        IncludeErrorDetail = false
+    }.ConnectionString;
+}
 
 public partial class Program
 {
