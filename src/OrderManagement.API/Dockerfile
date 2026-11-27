@@ -18,6 +18,11 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
+ADD --chmod=444 \
+    https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
+    /app/certs/global-bundle.pem
+
+ENV PGSSLROOTCERT=/app/certs/global-bundle.pem
 ENV ASPNETCORE_HTTP_PORTS=8080
 
 EXPOSE 8080
