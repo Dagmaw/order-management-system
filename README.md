@@ -13,9 +13,9 @@ A layered .NET Order Management API and a separate Spring Boot Inventory Service
 - Product request validation with FluentValidation.
 - Centralized Problem Details exception responses.
 - Serilog JSON logging with request correlation IDs.
-- AWS infrastructure as code: private RDS, VPC routing, ECR, ECS Fargate setup tasks, Secrets Manager, and CloudWatch logs.
+- AWS infrastructure as code: private RDS, VPC routing, ECR, ECS Fargate API/setup tasks, ALB, ACM HTTPS, Route 53, Secrets Manager, and CloudWatch logs.
 - GitHub OIDC authentication, image publishing, approved infrastructure changes, secret initialization, and database migration workflows.
-- Separate database setup program for migrations and application-login configuration.
+- Separate approved database setup operations for migrations, application-login configuration, and Admin assignment.
 
 ## Project Status
 
@@ -25,10 +25,10 @@ A layered .NET Order Management API and a separate Spring Boot Inventory Service
 | Local Inventory Service | PostgreSQL persistence with JPA/Hibernate and Flyway implemented |
 | Service integration | Orders and Inventory run independently |
 | CI | .NET and Java build/test jobs configured; successful runs recorded during the exercise |
-| AWS exercise | Infrastructure and migrations were exercised, then infrastructure was intentionally destroyed to avoid ongoing cost |
-| Public AWS API | API service, ALB/HTTPS, and end-to-end public verification remain |
+| AWS exercise | Rebuilt and deployed; migrations, application login, and controlled Admin assignment verified |
+| Public AWS API | HTTPS API on private Fargate behind ALB; public functional and task-replacement persistence checks passed |
 
-The Terraform workflow currently generates **destroy plans**. Review it before a future rebuild. Final empty-state and outside-Terraform cleanup checks are documented in [Section 9](docs/part-2/section-09-aws-deployment.md).
+Deployment and verification completed on 27 November 2026. Exercise resources remain running. See [Section 9.2](docs/part-2/section-09-2-aws-deployment.md) for results, limitations, and cleanup planning.
 
 ## Technology Stack
 
@@ -65,7 +65,7 @@ Postman / HTTP client
 
 The services currently run independently; Orders does not call Inventory.
 
-The AWS exercise uses a separate private RDS database and a one-off ECS database setup task. Its public API architecture and cleanup history are documented in [Section 9](docs/part-2/section-09-aws-deployment.md).
+The AWS exercise uses a separate private RDS database and a one-off ECS database setup task. Its public API architecture and cleanup history are documented in [Section 9.2](docs/part-2/section-09-2-aws-deployment.md).
 
 ## Quick Start
 
@@ -147,7 +147,8 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 6 — Authentication, Roles, and Order Ownership](docs/part-2/section-06-authentication.md)
 - [Section 7 — Validation, Error Handling, and Structured Logging](docs/part-2/section-07-validation-errors-and-logging.md)
 - [Section 8 — Inventory Persistence with PostgreSQL](docs/part-2/section-08-inventory-persistence.md)
-- [Section 9 — AWS Deployment and Cleanup](docs/part-2/section-09-aws-deployment.md)
+- [Section 9.1 — AWS Deployment and Verification](docs/part-2/section-09-1-aws-deployment.md)
+- [Section 9.2 — Detailed AWS Deployment Walkthrough](docs/part-2/section-09-2-aws-deployment.md)
 
 
 ## Testing
@@ -172,10 +173,10 @@ The .NET tests cover service behavior, authentication, registration/login, role 
 |---|---|
 | [Build and Test](.github/workflows/ci.yml) | .NET/Java checks; API image publishing after successful main-branch push checks |
 | [Terraform Lock](.github/workflows/terraform-lock.yml) | Provider lock-file maintenance |
-| [Terraform AWS Dev](.github/workflows/terraform-dev.yml) | Formatting, validation, planning, and approved saved-plan application; currently destroy mode |
+| [Terraform AWS Dev](.github/workflows/terraform-dev.yml) | Formatting, validation, planning, and approved saved-plan application |
 | [Publish Database Setup Image](.github/workflows/publish-database-setup.yml) | Build/publish the setup image and report its immutable ECS reference |
 | [Initialize Secret](.github/workflows/initialize-secret.yml) | Initialize application database credentials while preserving an existing current value |
-| [Run Database Setup](.github/workflows/run-database-setup.yml) | Launch a private Fargate setup task and verify its exit code |
+| [Run Database Setup](.github/workflows/run-database-setup.yml) | Run migrations or controlled Admin assignment in a private Fargate task and verify its exit code |
 
 Publishing an image does not deploy a running API service. AWS publishing jobs require the project repository and IAM roles to exist; they can fail after cleanup until prerequisites are restored or publishing is disabled.
 
@@ -187,7 +188,7 @@ src/                   .NET application projects
 tests/                 .NET test projects
 services/              Spring Boot Inventory Service with JPA/Flyway
 infra/learning/        Local Terraform exercise
-infra/aws/dev/         AWS exercise infrastructure (destroyed)
+infra/aws/dev/         AWS deployment infrastructure
 docs/part-1/           Sections 1–5
 docs/part-2/           Sections 6–9
 compose.yaml           Application and utility services
@@ -199,8 +200,8 @@ README.md              Project home
 
 - Inventory persists to PostgreSQL but does not integrate with Orders; its initial sample rows are Flyway seed data.
 - Authentication uses local accounts and JWTs; SSO and refresh tokens are not implemented.
-- AWS infrastructure was provisioned and later destroyed for exercise cleanup. API service, ALB, and public testing remain; see Section 9.
-- AWS automation exists; the Terraform workflow currently plans destruction. Review it before any future rebuild.
+- AWS functional verification passed; production load, disaster recovery, and high availability testing remain outside this exercise. See Section 9.2.
+- AWS exercise resources remain running; review costs and the exact plan before any cleanup. Preserve the company domain and hosted zone.
 - Earlier section instructions are milestone records rather than a replacement for current configuration.
 
 
