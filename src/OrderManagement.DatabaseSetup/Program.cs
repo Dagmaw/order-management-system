@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using OrderManagement.Infrastructure.Data;
@@ -33,6 +34,15 @@ try
 
     await using var database = new ApplicationDbContext(options);
 
+    var operation = Environment.GetEnvironmentVariable("DB_SETUP_OPERATION") ?? "migrate";
+    if (operation == "grant-admin")
+    {
+        await GrantAdminAsync(database);
+        return 0;
+    }
+    if (operation != "migrate")
+        throw new InvalidOperationException("Unknown database setup operation.");
+
     Console.WriteLine("Checking pending database migrations.");
 
     var pending = (
@@ -54,7 +64,7 @@ try
 catch (Exception exception)
 {
     Console.Error.WriteLine(
-        $"Database migration failed ({exception.GetType().Name}).");
+        $"Database setup failed ({exception.GetType().Name}).");
 
     if (exception is PostgresException postgres)
     {
@@ -137,4 +147,32 @@ static async Task ConfigureApplicationLoginAsync(
 
     await using var app = new NpgsqlConnection(appSettings.ConnectionString);
     await app.OpenAsync();
+}
+static async Task GrantAdminAsync(ApplicationDbContext database)
+{
+    var email = Required("ADMIN_EMAIL").Trim();
+    if (!int.TryParse(Required("ADMIN_USER_ID"), out var userId) || userId <= 0)
+        throw new InvalidOperationException("A positive ADMIN_USER_ID is required.");
+
+    await using var transaction = await database.Database.BeginTransactionAsync(
+        System.Data.IsolationLevel.Serializable);
+    var normalizer = new UpperInvariantLookupNormalizer();
+    var normalizedEmail = normalizer.NormalizeEmail(email);
+    var user = await database.Users.SingleOrDefaultAsync(
+        account => account.NormalizedEmail == normalizedEmail);
+    if (user is null || user.UserId != userId)
+        throw new InvalidOperationException("Admin email and user ID do not match an existing account.");
+    var role = await database.Roles.SingleOrDefaultAsync(item => item.NormalizedName == "ADMIN");
+    if (role is null)
+        throw new InvalidOperationException("The Admin role must already exist.");
+    var alreadyAdmin = await database.UserRoles.AnyAsync(
+        item => item.UserId == user.Id && item.RoleId == role.Id);
+    if (!alreadyAdmin)
+    {
+        database.UserRoles.Add(new IdentityUserRole<string> { UserId = user.Id, RoleId = role.Id });
+        await database.SaveChangesAsync();
+    }
+    await transaction.CommitAsync();
+    Console.WriteLine($"Admin grant verified for user ID {userId}. Already assigned: {alreadyAdmin}.");
+    Console.WriteLine("Log in again to obtain a token containing the updated role.");
 }
