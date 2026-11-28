@@ -2,6 +2,8 @@
 
 ## Current status
 
+Preparation is merged. [Trusted main-branch CI run 46120120982](https://github.com/Dagmaw/order-management-system/actions/runs/46120120982) passed and published the API candidate from commit `df4dbe4d6ccd466fa85821474edab4709e443fec`. Section 13.6 pins the verified ECR digest and prepares the separate activation review.
+
 Orders migrations completed successfully in AWS in Section 13.4. Java Inventory is running privately and healthy. This section prepares the API image and integration configuration; it does not change the running API image or enable Inventory calls.
 
 ## 1. Prepare and verify the API image

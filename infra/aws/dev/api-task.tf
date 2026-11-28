@@ -1,5 +1,5 @@
 locals {
-  api_image = "638500336727.dkr.ecr.us-east-1.amazonaws.com/order-management-api@sha256:5d7ac5807863bbc0b651561413407ed6a367d3c87e53b299c4aa08b43a0719f6"
+  api_image = "638500336727.dkr.ecr.us-east-1.amazonaws.com/order-management-api@sha256:105e39a02d0f7975822e7ea3b1d50c9460c82c490580bf8bf2dbe6666bf432c4"
 }
 
 resource "aws_cloudwatch_log_group" "api" {

@@ -1,7 +1,7 @@
-# Release preparation only. Enable after the API candidate is published and reviewed.
+# Section 13.6: trusted API candidate published; Orders migrations completed.
 variable "orders_inventory_enabled" {
   type    = bool
-  default = false
+  default = true
 }
 locals {
   orders_inventory_environment = var.orders_inventory_enabled ? [
