@@ -6,7 +6,7 @@ This milestone selects Amazon Cognito for machine-to-machine identity, adds its 
 
 Prepared resources are a dedicated service user pool, its OAuth domain, an Inventory resource server, a confidential Orders client, a Secrets Manager secret/version, and a narrowly scoped GitHub verification role/policy. Existing Customer login, ECS API image, RDS databases, DNS, and running services are unchanged.
 
-The live Terraform preview shows **8 additions, 0 changes, 0 deletions**. The initial apply created the Cognito pool, domain, resource server, Orders client, verification role, and secret metadata, then stopped on a missing dedicated-secret read permission. That permission is corrected; a fresh recovery plan is being generated to finish the remaining resources. The real Cognito exchange remains unverified until the deployment steps below complete. Do not mark this milestone deployed based only on local tests.
+The live Terraform preview shows **8 additions, 0 changes, 0 deletions**. Cognito provisioning completed successfully after the documented recovery. The real-provider workflow assumed its verification role after the OIDC trust correction, but failed at the first order assertion. A reproduced Cognito header compatibility bug is corrected in source; the live retry remains pending. The real Cognito exchange remains unverified until the deployment steps below complete. Do not mark this milestone deployed based only on local tests.
 
 ## 2. Cost before deployment
 
@@ -28,7 +28,7 @@ Cognito client-credentials grants do not support API resource binding. Its M2M a
 4. `sub` exactly equal to that client ID, excluding human-user tokens.
 5. `token_use=access`, rejecting ID tokens and missing token-use claims.
 6. The configured reservation or stock permission scope.
-7. The supported JWT token type.
+7. The optional `typ` header may be absent, as in AWS Cognito access tokens. If supplied, only `JWT` or `at+jwt` is accepted. Generic provider mode still requires its explicit type contract.
 
 Only this explicit mode uses Cognito's machine-client contract instead of an API audience. Generic `Jwks` mode continues to require the configured audience, including when a token omits `aud`. Missing audiences now return a validation failure rather than an unchecked null error.
 
@@ -149,3 +149,17 @@ The first verification run could not assume its secret-read-only role because th
 The verification role and its Terraform source now require that exact subject and `aud=sts.amazonaws.com`. No wildcard was added and its dedicated-secret read policy was unchanged. See [GitHub's AWS OIDC guidance](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws).
 
 The Cognito recovery apply completed successfully in run 46107174616: 2 additions, no changes or deletions. Real-provider verification is being retried after this trust correction; it is not yet recorded as passed.
+
+## 14. Cognito access-token header compatibility
+
+The first real-provider verification passed GitHub role assumption and application registration/login, then failed its first order assertion. Local Cognito test fixtures had always included `typ=JWT`, but AWS documents Cognito headers with only `kid` and `alg`. Reproducing that documented header caused the existing Inventory validator to reject an otherwise valid Cognito M2M token.
+
+The regression fixture now omits `typ`. The validator accepts an absent type only in explicit Cognito mode while preserving signature, pool issuer, machine-subject/client equality, allowlist, token-use, expiration, and scope checks. Unsupported explicit types remain rejected. A separate regression test confirms generic mode still rejects a missing type even when its audience matches.
+
+The integration runner now reports only the first order's HTTP status and submission state on assertion failure. It never prints the token, client secret, or full response body. The local diagnostic route that would access live credentials outside the approved verification role was rejected by automatic review and was not executed. Live credential access remains inside the approved GitHub workflow.
+
+After merging this fix, start a new **Verify Cognito Service Identity** run on main. Rerunning the old failed run would use its old commit and repeat the old behavior. Require the full real-provider test pass before marking service-token exchange verified.
+
+Reference: [AWS access-token header documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html).
+
+Verification of the header fix: all 34 Java tests passed locally and in the Linux image build, and all 20 disposable two-service integration assertions passed. Real Cognito-backed order verification remains pending a fresh main-branch run.

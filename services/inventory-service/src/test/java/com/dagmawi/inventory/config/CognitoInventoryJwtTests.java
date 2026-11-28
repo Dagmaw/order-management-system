@@ -20,7 +20,7 @@ class CognitoInventoryJwtTests {
         var claims=new JWTClaimsSet.Builder().issuer(issuer).subject(subject).claim("client_id",client)
             .claim("token_use",use).claim("scope","inventory/reserve").expirationTime(Date.from(Instant.now().plusSeconds(300)));
         if(audience!=null)claims.audience(audience);
-        var jwt=new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("cognito").type(JOSEObjectType.JWT).build(),claims.build());
+        var jwt=new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("cognito").build(),claims.build());
         jwt.sign(new RSASSASigner(key.getPrivate()));return jwt.serialize();
     }
     @Test void cognitoM2mWithoutAudienceRequiresAccessTokenAndMatchingMachineSubject() throws Exception {
@@ -44,5 +44,12 @@ class CognitoInventoryJwtTests {
     @Test void cognitoTrustCannotPointAtAnotherIssuerOrJwksLocation() {
         assertThrows(IllegalArgumentException.class,()->InventoryJwtDecoders.cognito("https://other.example",JWKS,Set.of("orders"),new RestTemplate()));
         assertThrows(IllegalArgumentException.class,()->InventoryJwtDecoders.cognito(ISSUER,"https://other.example/keys",Set.of("orders"),new RestTemplate()));
+    }
+    @Test void genericModeStillRejectsMissingTypeEvenWhenAudienceMatches() throws Exception {
+        var key=InventoryProviderJwtTests.key();var rest=new RestTemplate();var server=MockRestServiceServer.bindTo(rest).build();
+        server.expect(requestTo(JWKS)).andRespond(withSuccess(InventoryProviderJwtTests.jwks(key,"cognito"),MediaType.APPLICATION_JSON));
+        var decoder=InventoryJwtDecoders.provider(ISSUER,"Inventory.API",JWKS,Set.of("orders"),rest);
+        var missingType=token(key,ISSUER,"orders","orders","access","Inventory.API");
+        assertThrows(JwtException.class,()->decoder.decode(missingType));server.verify();
     }
 }
