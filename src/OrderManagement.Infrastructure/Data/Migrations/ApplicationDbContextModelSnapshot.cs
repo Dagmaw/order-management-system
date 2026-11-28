@@ -165,6 +165,9 @@ namespace OrderManagement.Infrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("InventorySubmissionId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -173,6 +176,9 @@ namespace OrderManagement.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("InventorySubmissionId")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -223,6 +229,10 @@ namespace OrderManagement.Infrastructure.Data.Migrations
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(240)
+                        .HasColumnType("character varying(240)");
 
                     b.Property<Guid?>("LeaseOwner")
                         .HasColumnType("uuid");

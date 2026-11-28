@@ -17,6 +17,8 @@ public static class InventoryRegistration
             .Validate(options => options.IsValid(), "Configure a valid Inventory base URL, timeout, issuer, audience, and private-key file.")
             .ValidateOnStart();
         services.AddSingleton<IInventoryServiceTokenProvider, InventoryServiceTokenProvider>();
+        services.AddScoped<OrderSubmissionCoordinator>();
+        services.AddHostedService<SubmissionRecoveryWorker>();
         services.AddHttpClient<IInventoryClient, InventoryHttpClient>((provider, client) =>
         {
             var options = provider.GetRequiredService<IOptions<InventoryClientOptions>>().Value;

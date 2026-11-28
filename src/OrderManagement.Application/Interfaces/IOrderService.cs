@@ -1,9 +1,10 @@
-﻿using OrderManagement.Application.DTOs;
+using OrderManagement.Application.DTOs;
 
 namespace OrderManagement.Application.Interfaces
 {
     public interface IOrderService
     {
+        Task<OrderManagement.Domain.Entities.Order> PrepareOrderAsync(CreateOrderDto dto, CancellationToken cancellationToken = default);
         Task<OrderDto> CreateOrderAsync(CreateOrderDto dto, CancellationToken cancellationToken = default);
 
         Task<OrderDto?> GetOrderByIdAsync(int Id, CancellationToken cancellationToken = default);

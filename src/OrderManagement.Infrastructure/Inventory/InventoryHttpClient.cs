@@ -61,7 +61,7 @@ public sealed class InventoryHttpClient(HttpClient http, IInventoryServiceTokenP
             }
             var result = await response.Content.ReadFromJsonAsync<InventoryReservation>(deadline.Token);
             if (result is null || result.ReservationId != id || result.Status is not ("RESERVED" or "RELEASED")
-                || result.Items is null || result.Items.Count is < 1 or > 10
+                || result.Items is null || result.Items.Count > 10 || (result.Status == "RESERVED" && result.Items.Count == 0)
                 || result.Items.Any(item => item is null || item.ProductId <= 0 || item.Quantity <= 0))
                 throw new InventoryUnavailableException(method != HttpMethod.Get);
             if (method == HttpMethod.Post && path.EndsWith("/release") && result.Status != "RELEASED")

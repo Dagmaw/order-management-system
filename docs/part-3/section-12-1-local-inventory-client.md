@@ -1,5 +1,7 @@
 # Section 12.1 — Local .NET-to-Java Client Foundation
 
+**Later milestone:** [Section 12.3](section-12-3-local-integrated-orders.md) now connects this foundation to the local order workflow and records the applied local migrations. Statements below about pending integration describe the end of this earlier stage.
+
 ## Status — 27 November 2026
 
 Client foundation implemented and verified. This is the first stage of integration, not completion of the order workflow. The .NET API still creates orders using its existing database-only flow; it does not yet reserve inventory during POST orders. AWS remains running and unchanged.

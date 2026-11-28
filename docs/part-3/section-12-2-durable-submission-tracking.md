@@ -1,5 +1,7 @@
 # Section 12.2 — Durable Order Submission Tracking
 
+**Later milestone:** [Section 12.3](section-12-3-local-integrated-orders.md) now connects this foundation to the local order workflow and records the applied local migrations. Statements below about pending integration describe the end of this earlier stage.
+
 ## Status — 27 November 2026
 
 Tracking storage and an additive EF migration are implemented and tested. This is prerequisite infrastructure for the integration workflow. No order HTTP endpoint, automatic recovery worker, or Inventory-driven order creation has been enabled yet. The migration was applied only to disposable verification databases, not local application or AWS databases.

@@ -1,4 +1,4 @@
-# Optional LOCAL client-foundation profile. This does not yet change order creation.
+# Optional LOCAL integrated-order profile. Requires local migrations and the private development key.
 services:
   api:
     environment:

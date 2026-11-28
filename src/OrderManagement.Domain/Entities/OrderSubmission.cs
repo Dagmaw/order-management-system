@@ -10,6 +10,7 @@ public sealed class OrderSubmission
     public string RequestHash { get; set; } = "";
     public string SnapshotJson { get; set; } = "";
     public string State { get; set; } = "Pending";
+    public string? FailureReason { get; set; }
     public Guid? LeaseOwner { get; set; }
     public DateTime? LeaseUntilUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; }

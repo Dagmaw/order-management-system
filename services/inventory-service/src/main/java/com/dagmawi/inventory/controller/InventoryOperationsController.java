@@ -28,6 +28,6 @@ public class InventoryOperationsController {
     public ReservationResponse get(@PathVariable UUID id) { return service.get(id); }
 
     @PostMapping("/reservations/{id}/release")
-    @Operation(summary="Release reserved stock once",description="Repeated release returns the same RELEASED state without changing stock again.")
+    @Operation(summary="Release reserved stock once",description="Repeated release is idempotent. An unknown UUID creates a RELEASED cancellation marker to block late reserve requests.")
     public ReservationResponse release(@PathVariable UUID id) { return service.release(id); }
 }
