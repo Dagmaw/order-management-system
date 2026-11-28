@@ -1,0 +1,133 @@
+# Section 12.7 — Amazon Cognito Service Identity in AWS
+
+## 1. Scope and current status
+
+This milestone selects Amazon Cognito for machine-to-machine identity, adds its explicit Inventory token contract, and prepares the AWS configuration and real-provider verification workflow.
+
+Prepared resources are a dedicated service user pool, its OAuth domain, an Inventory resource server, a confidential Orders client, a Secrets Manager secret/version, and a narrowly scoped GitHub verification role/policy. Existing Customer login, ECS API image, RDS databases, DNS, and running services are unchanged.
+
+The live Terraform preview shows **8 additions, 0 changes, 0 deletions**. Resources are not yet applied. The IAM bootstrap requires explicit approval, and the real Cognito exchange remains unverified until the deployment steps below complete. Do not mark this milestone deployed based only on local tests.
+
+## 2. Cost before deployment
+
+For US East (N. Virginia), AWS currently gives an M2M example priced at $0.00225 per successful token response ($2.25 per 1,000). There is no separate app-client registration charge. One hourly acquisition is approximately $1.62 per 30-day month; refresh headroom, restarts, parallel instances, and testing add requests. The adapter shares a cached token within each API process.
+
+A live verification run normally needs one token before the API restart and another after it, approximately $0.0045 total for two successful responses. Failed retries or extra API instances can change that count. Secrets Manager storage/API calls and existing infrastructure charges are additional. No new continuously running compute service is introduced by the Cognito resources.
+
+Check current [Cognito pricing](https://aws.amazon.com/cognito/pricing/) and [Secrets Manager pricing](https://aws.amazon.com/secrets-manager/pricing/) before applying. The existing daily budget is an alert, not a spending cap.
+
+## 3. Understand the explicit Cognito token contract
+
+Cognito client-credentials grants do not support API resource binding. Its M2M access token identifies the machine with matching `sub` and `client_id`. See [AWS access-token documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html) and [resource-binding limitations](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-define-resource-servers.html#cognito-user-pools-resource-binding).
+
+`INVENTORY_JWT_MODE=Cognito` therefore requires:
+
+1. An RS256 signature verified using the exact pool's HTTPS JWKS endpoint.
+2. Exact configured pool issuer, required expiration, nonempty subject, and normal timestamp validation.
+3. An allowlisted string `client_id`.
+4. `sub` exactly equal to that client ID, excluding human-user tokens.
+5. `token_use=access`, rejecting ID tokens and missing token-use claims.
+6. The configured reservation or stock permission scope.
+7. The supported JWT token type.
+
+Only this explicit mode uses Cognito's machine-client contract instead of an API audience. Generic `Jwks` mode continues to require the configured audience, including when a token omits `aud`. Missing audiences now return a validation failure rather than an unchecked null error.
+
+The Cognito issuer must match a standard AWS-region user-pool issuer, and the JWKS URL must equal that issuer plus `/.well-known/jwks.json`. This implementation targets the standard AWS partition used by this project.
+
+## 4. Review Terraform and least privilege
+
+Read `infra/aws/dev/service-identity.tf` before deployment:
+
+- Pool: `order-management-dev-services`, Lite tier, deletion protection enabled, public self-registration disabled.
+- Domain prefix: `oms-dev-services-638500336727`.
+- Resource-server scopes: `inventory/reserve` and `inventory/stock.write`.
+- Orders client: only the OAuth `client_credentials` grant and `inventory/reserve` permission. No stock-administration scope is granted.
+- Token lifetime: one hour.
+- Secret: `order-management/dev/orders-service-identity`.
+- Verification role: `order-management-dev-service-identity-test`, assuming the existing repository's `terraform-dev` environment through GitHub OIDC, with read access to only the dedicated secret.
+
+The Terraform output `cognito_service_identity` contains non-secret connection information. It never outputs the client secret. Terraform must retain generated client credentials in its protected state; do not publish state or binary plan files.
+
+The supplementary role policies are reviewable at:
+
+- `infra/iam/cognito-terraform-plan.json`: scoped Cognito configuration reads, the dedicated secret/verification-role reads, and private saved-plan upload/read.
+- `infra/iam/cognito-terraform-apply.json`: those reads plus tagged project-pool management, the dedicated secret, only the verification IAM role, and private saved-plan download/deletion.
+
+The bootstrap attaches one named managed policy to each existing Terraform role. It does not grant AdministratorAccess or alter unrelated roles. It verifies account 638500336727 and fails rather than overwriting an existing policy with different contents.
+
+## 5. Approve and bootstrap the required IAM permissions
+
+Automatic approval review rejected running the bootstrap because persistent IAM grants need explicit approval. No bootstrap changes have been applied.
+
+After reviewing and approving the exact policy files, run from the repository root with the existing administrative learning profile:
+
+```powershell
+./scripts/initialize-cognito-permissions.ps1 -Profile order-management-dev
+```
+
+The script uses the pinned official AWS CLI image and mounts the local credentials file read-only. It creates/attaches the two scoped policies to `order-management-dev-terraform-plan` and `order-management-dev-terraform-apply`. Do not replace this with broader policies if a command fails; inspect the specific denial.
+
+Because these Terraform roles are provisioned outside the application Terraform state, this prerequisite is an explicit bootstrap step rather than a circular dependency in the deployment itself.
+
+## 6. Preserve private saved-plan review
+
+This repository is public. Saved Terraform plans can contain sensitive values even when terminal output masks them, and authenticated readers can download public-repository Actions artifacts. See [Terraform saved-plan guidance](https://developer.hashicorp.com/terraform/cli/commands/plan) and [GitHub artifact access](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts).
+
+The Terraform workflow now stores the binary plan under the existing private state bucket:
+
+`reviewed-plans/<run-id>/<attempt>/<commit>.tfplan`
+
+It verifies all four bucket public-access blocks are enabled, requests AES256 server-side encryption, and passes only the object key and SHA256 digest between jobs. The approved apply job downloads that exact object and verifies its digest before applying it. A successful apply removes the saved object; failed or abandoned reviews leave it private for operator review/cleanup. Do not delete the state file or its versions when cleaning up saved plans.
+
+Terraform runtime files, state, and saved plans are also excluded from the API Docker build context.
+
+## 7. Commit, review, and merge
+
+1. Commit Section 12.7 on its feature branch and open a PR to main.
+2. Confirm Build and Test passes, including the disposable integration suite.
+3. Confirm Terraform formatting, initialization, and validation pass.
+4. Review the IAM bootstrap policies and private-plan workflow change along with the Cognito token contract.
+5. Merge only after the checks and review complete.
+
+A feature-branch local plan is evidence of the proposed resource changes, not a substitute for the exact main-branch saved plan used by the approved workflow.
+
+## 8. Run the approved AWS deployment
+
+1. Open GitHub Actions → **Terraform AWS Dev** → **Run workflow** on `main`.
+2. Run with `apply=false` first and review the preview. Expect the eight additions; investigate changes to existing resources or any deletion.
+3. Run again with `apply=true`. The plan job saves a fresh private plan in S3.
+4. Review the plan output before approving the `terraform-dev` environment apply job.
+5. Confirm `Apply complete` and the non-secret `cognito_service_identity` output.
+6. If an IAM action is denied, stop and review the scoped permission needed. Do not expand permissions indiscriminately.
+
+This deploys identity resources only; it does not enable Inventory in the running AWS API or deploy Java.
+
+## 9. Verify real Cognito-issued tokens
+
+After the Terraform apply succeeds:
+
+1. Open GitHub Actions → **Verify Cognito Service Identity**.
+2. Run it on `main` and approve its `terraform-dev` environment job.
+3. The workflow assumes the secret-read-only verification role.
+4. `scripts/verify-cognito.py` reads the dedicated secret into process memory without printing it and configures the disposable Compose stack for ClientCredentials/Cognito mode.
+5. The real .NET adapter requests a token from Cognito; the real Java decoder retrieves the pool JWKS and validates that token.
+6. The same 20 integration assertions verify order creation, replay, permissions, insufficient stock, concurrent requests, and recovery across restarts.
+7. Inspect the sanitized JSON results artifact and require a successful workflow conclusion.
+
+The application containers and their PostgreSQL databases run on the temporary GitHub runner. Cognito and Secrets Manager are real AWS services. The test cleans up only its disposable containers/databases; it keeps the Cognito resources for continued project work. No tokens, client secrets, or raw Terraform plans are uploaded as test artifacts.
+
+The verification workflow is manual and main-branch-only so ordinary pull requests do not issue billable Cognito requests or receive AWS secret access.
+
+## 10. Next AWS integration milestone
+
+After real-provider verification passes, deploy Java privately with its own database credentials, production profile, HTTPS connectivity, health checks, logs, and network rules. Inject the Orders client secret into the future API task through Secrets Manager and grant only the necessary role access. Review/apply Orders migrations before enabling integration. Keep the current AWS API image pinned until that reviewed deployment is ready.
+
+## 11. Verification record — November 27, 2026
+
+- Terraform formatting and validation passed using the locked AWS provider 6.73.0 and Terraform 1.17.2.
+- A live read-only plan against the existing backend reported 8 additions, 0 changes, 0 deletions.
+- All 33 Java tests passed, including the explicit Cognito contract and unchanged generic audience enforcement.
+- All 20 local two-service integration assertions passed after updating optional provider settings and Docker exclusions.
+- AWS IAM Access Analyzer reported no policy-validation errors for either proposed bootstrap policy. The PowerShell bootstrap and Python verification runner passed syntax checks.
+- The existing state bucket was verified to have all four public-access blocks enabled.
+- No Cognito resources or IAM grants were applied. Real Cognito token exchange remains pending explicit IAM approval, PR review/merge, approved Terraform apply, and the manual verification workflow.
