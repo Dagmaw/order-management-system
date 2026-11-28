@@ -160,6 +160,8 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 
 - [Section 11.2 — Local Inventory JWT Security](docs/part-3/section-11-2-inventory-security.md)
 
+- [Section 12.1 — Local .NET-to-Java Client Foundation](docs/part-3/section-12-1-local-inventory-client.md)
+
 ## Testing
 
 Run all .NET tests:

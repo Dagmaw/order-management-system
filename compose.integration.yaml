@@ -1,0 +1,15 @@
+# Optional LOCAL client-foundation profile. This does not yet change order creation.
+services:
+  api:
+    environment:
+      Inventory__Enabled: "true"
+      Inventory__BaseUrl: "http://inventory:8080/"
+      Inventory__TimeoutSeconds: "5"
+      Inventory__Issuer: "Inventory.LocalIssuer"
+      Inventory__Audience: "Inventory.API"
+      Inventory__PrivateKeyPath: "/run/local-inventory/private-key.pem"
+    volumes:
+      - type: bind
+        source: ./.local-inventory-auth/private-key.pem
+        target: /run/local-inventory/private-key.pem
+        read_only: true
