@@ -27,6 +27,6 @@ public class DatabaseInventoryService implements InventoryService {
 
         return new InventoryResponse(
                 item.getProductId(),
-                item.getAvailableQuantity());
+                item.getAvailableQuantity(), item.getVersion());
     }
 }

@@ -8,6 +8,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(InventoryOperationException.class)
+    public ProblemDetail handleOperation(InventoryOperationException exception) {
+        var problem=ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(exception.getStatus()),exception.getMessage());
+        problem.setTitle("Inventory operation rejected");
+        return problem;
+    }
+
 
     @ExceptionHandler(InventoryNotFoundException.class)
     public ProblemDetail handleNotFound(

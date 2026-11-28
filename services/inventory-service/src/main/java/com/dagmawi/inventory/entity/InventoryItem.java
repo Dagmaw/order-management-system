@@ -15,6 +15,11 @@ public class InventoryItem
     @Column(name = "available_quantity", nullable = false)
     private Integer availableQuantity;
 
+    @Column(name = "version", nullable = false)
+    private Long version;
+
+    public long getVersion() { return version; }
+
     protected InventoryItem() {}
 
     public long getProductId() {

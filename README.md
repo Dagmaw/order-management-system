@@ -156,6 +156,8 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 10.1 — Local OpenAPI and Swagger UI](docs/part-3/section-10-1-openapi-swagger.md)
 - [Section 10.2 — OpenAPI and Swagger UI on AWS](docs/part-3/section-10-2-openapi-swagger-aws.md)
 
+- [Section 11.1 — Local Inventory Reservations and Release](docs/part-3/section-11-1-inventory-reservations.md)
+
 ## Testing
 
 Run all .NET tests:
