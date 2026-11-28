@@ -139,3 +139,13 @@ The initial approved apply stopped when Terraform tried to read the dedicated se
 The failure left the secret in state with a taint marker despite successful creation. Its AWS metadata and Terraform attributes were verified, then only that marker was cleared with `terraform untaint aws_secretsmanager_secret.orders_service_identity`. No secret was deleted or recreated. The intermediate recovery run was cancelled before applying its stale plan, and a fresh saved-plan run was started from repaired state.
 
 Do not rerun the original failed apply job: its binary plan is stale after the partial apply and state repair. Review the new plan and require no deletions or replacements of the already-created resources. The expected remaining additions are the secret version and verification role's inline policy.
+
+## 13. GitHub OIDC subject correction
+
+The first verification run could not assume its secret-read-only role because the trust policy used the legacy repository-name-only subject. This repository uses immutable owner/repository IDs, as confirmed by its working Terraform role trust policy:
+
+`repo:Dagmaw@31310623/order-management-system@1431786532:environment:terraform-dev`
+
+The verification role and its Terraform source now require that exact subject and `aud=sts.amazonaws.com`. No wildcard was added and its dedicated-secret read policy was unchanged. See [GitHub's AWS OIDC guidance](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws).
+
+The Cognito recovery apply completed successfully in run 46107174616: 2 additions, no changes or deletions. Real-provider verification is being retried after this trust correction; it is not yet recorded as passed.
