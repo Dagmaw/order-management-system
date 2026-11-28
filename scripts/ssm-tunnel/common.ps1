@@ -31,7 +31,18 @@ function Get-TunnelInstance {
     return $InstanceId
 }
 function Assert-TunnelContainer {
-    $label = & docker inspect --format '{{ index .Config.Labels "oms.inventory-tunnel" }}' $script:ContainerName 2>$null
-    if ($LASTEXITCODE -eq 0 -and $label -ne 'true') { throw 'A different container owns the tunnel name.' }
-    return ($LASTEXITCODE -eq 0)
+    # Parse JSON instead of passing quoted Go templates through Windows PowerShell 5.1.
+    # List first: inspecting a missing container writes stderr, which is terminating in 5.1.
+    $filter = 'name=^/' + $script:ContainerName + '$'
+    $ids = @(& docker container ls --all --quiet --filter $filter)
+    if ($LASTEXITCODE -ne 0) { throw 'Could not query Docker containers. Check Docker Desktop.' }
+    if ($ids.Count -eq 0) { return $false }
+    if ($ids.Count -ne 1) { throw 'The tunnel container name did not resolve uniquely.' }
+    $raw = & docker container inspect $ids[0]
+    if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the tunnel container.' }
+    $container = @($raw | ConvertFrom-Json)[0]
+    if ($container.Config.Labels.'oms.inventory-tunnel' -ne 'true') {
+        throw 'A different container owns the tunnel name.'
+    }
+    return $true
 }
