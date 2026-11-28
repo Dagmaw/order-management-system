@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "ObserveOnlyInventoryDeployments",
+    "Effect": "Allow",
+    "Action": ["ecs:ListServiceDeployments", "ecs:DescribeServiceDeployments", "ecs:DescribeServiceRevisions"],
+    "Resource": [
+      "arn:aws:ecs:us-east-1:638500336727:service/order-management-dev/order-management-dev-inventory",
+      "arn:aws:ecs:us-east-1:638500336727:service-deployment/order-management-dev/order-management-dev-inventory/*",
+      "arn:aws:ecs:us-east-1:638500336727:service-revision/order-management-dev/order-management-dev-inventory/*"
+    ]
+  }]
+}

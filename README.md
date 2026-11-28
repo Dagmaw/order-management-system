@@ -171,7 +171,7 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 12.7 — Amazon Cognito Service Identity](docs/part-3/section-12-7-cognito-service-identity.md)
 - [Section 13.1 — Private Inventory Deployment Foundation](docs/part-4/section-13-1-private-inventory-foundation.md)
 - [Section 13.2 - Inventory Database Bootstrap](docs/part-4/section-13-2-inventory-database-bootstrap.md) - completed in AWS; dedicated database/login verified.
-- [Section 13.3 - Private Inventory Service Activation](docs/part-4/section-13-3-private-inventory-activation.md) - prepared for deployment review.
+- [Section 13.3 - Private Inventory Service Activation](docs/part-4/section-13-3-private-inventory-activation.md) - running privately in AWS; deployment observation permission corrected.
 
 ## Testing
 
