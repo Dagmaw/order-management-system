@@ -29,3 +29,7 @@ foreach ($kind in @('plan','apply')) {
     Invoke-AwsJson -Arguments @('iam','attach-role-policy','--role-name',"order-management-dev-terraform-$kind",'--policy-arn',$arn) | Out-Null
     Write-Host "Configured scoped Inventory permissions for Terraform $kind."
 }
+
+# The management document stays below IAM's size quota by reusing the approved read policy.
+Invoke-AwsJson -Arguments @('iam','attach-role-policy','--role-name','order-management-dev-terraform-apply','--policy-arn','arn:aws:iam::638500336727:policy/order-management-dev-inventory-terraform-plan') | Out-Null
+Write-Host 'Configured Inventory read permissions for Terraform apply.'
