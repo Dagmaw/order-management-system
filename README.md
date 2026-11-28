@@ -172,12 +172,16 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 13.1 — Private Inventory Deployment Foundation](docs/part-4/section-13-1-private-inventory-foundation.md)
 - [Section 13.2 - Inventory Database Bootstrap](docs/part-4/section-13-2-inventory-database-bootstrap.md) - completed in AWS; dedicated database/login verified.
 - [Section 13.3 - Private Inventory Service Activation](docs/part-4/section-13-3-private-inventory-activation.md) - running privately in AWS; deployment observation permission corrected.
-- [Section 13.4 - Orders Database Prerequisite](docs/part-4/section-13-4-orders-database-prerequisite.md) - migrations completed in AWS; API integration remains disabled.
+- [Section 13.4 - Orders Database Prerequisite](docs/part-4/section-13-4-orders-database-prerequisite.md) - migrations completed in AWS; subsequent API integration deployed.
 - [Section 13.5 - Orders Inventory Release Preparation](docs/part-4/section-13-5-orders-inventory-release.md) - preparation merged; trusted API candidate published.
 - [Section 13.6 - Activate Orders to Private Inventory](docs/part-4/section-13-6-activate-orders-inventory.md) - deployed successfully; both services healthy.
 - [Section 13.7 - Live AWS Orders Smoke Checks](docs/part-4/section-13-7-live-aws-orders-smoke.md) - public checks verified; follow-up private stock check also passed.
 - [Section 13.8 - Private Stock Verifier](docs/part-4/section-13-8-private-stock-verifier.md) - 22 isolated checks passed; verifier image published.
 - [Section 13.9 - Private Verification Task](docs/part-4/section-13-9-private-verification-task.md) - deployed; real AWS stock/replay/conflict/rejection verification passed.
+
+### Part 5
+
+- [Section 14 - Deployment Automation](docs/part-5/section-14-deployment-automation.md) - read-only post-apply gate prepared and live-checked; first workflow demonstration pending.
 
 ## Testing
 
