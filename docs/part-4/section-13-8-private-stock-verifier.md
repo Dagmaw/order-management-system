@@ -80,3 +80,11 @@ Review that exact task/IAM/network plan before installing or applying it. Then a
 Require task exit 0 and a sanitized report showing AWS-private mode, the accepted order ID, before/after quantity/version, unchanged replay/conflict/rejection snapshots, and all checks passing. Keep passwords, customer tokens, machine credentials, and raw HTTP response bodies out of logs/artifacts.
 
 No outage drill, direct reservation-table inspection, concurrent load testing, shared-stock reset, or service restart is included. Those require their own controlled procedures if pursued later.
+
+## 7. Maven bootstrap throttling correction
+
+The first PR CI attempt failed before the verifier ran: Maven Central returned HTTP 429 while the Inventory Docker build downloaded the Maven 3.10.0 distribution. The Python CalledProcessError was only the Docker Compose wrapper error.
+
+`services/inventory-service/bootstrap-maven.sh` now runs only Maven's version/bootstrap command with at most four attempts, waiting 10/20/40 seconds for recognized transient transport failures. Other bootstrap failures fail immediately. After bootstrap, the actual `clean verify` runs once; test failures are not retried or skipped. Docker builds reuse a BuildKit Maven-directory cache, and standalone Java CI uses the same bootstrap helper.
+
+Four offline container checks cover successful bootstrap, recovery after two 429s, immediate checksum failure, and exhaustion after four 429s. All passed. The corrected Inventory Docker image also built successfully with its full Java test suite. This correction changes build behavior only, not the running AWS image pins or application behavior.

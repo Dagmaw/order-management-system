@@ -55,12 +55,12 @@ jobs:
             cache-dependency-path: services/inventory-service/pom.xml   
 
         - name: Normalize maven Wrapper line endings
-          run: sed -i 's/\r$//' mvnw
+          run: sed -i 's/\r$//' mvnw bootstrap-maven.sh
             
         - name: Show Java and Maven versions
           run: | 
                 java -version
-                sh ./mvnw --version
+                sh ./bootstrap-maven.sh
 
         - name: Build and run Java tests
           run: sh ./mvnw --batch-mode --no-transfer-progress clean verify
@@ -74,6 +74,8 @@ jobs:
             uses: actions/checkout@v7.0.1
             with:
               persist-credentials: false
+          - name: Verify Maven bootstrap retry boundaries offline
+            run: python3 scripts/test-maven-bootstrap.py
           - name: Verify private bootstrap launch restrictions
             run: python3 scripts/test-inventory-bootstrap-launcher.py
           - name: Verify Inventory database bootstrap over TLS
