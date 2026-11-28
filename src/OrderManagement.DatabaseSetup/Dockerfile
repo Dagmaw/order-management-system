@@ -25,8 +25,12 @@ ADD --chmod=444 \
     https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
     /app/certs/global-bundle.pem
 
+RUN chmod 755 /app/certs
+
 ENV PGSSLROOTCERT=/app/certs/global-bundle.pem
 
 USER $APP_UID
+
+RUN test -r /app/certs/global-bundle.pem
 
 ENTRYPOINT ["dotnet", "OrderManagement.DatabaseSetup.dll"]
