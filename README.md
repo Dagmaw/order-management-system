@@ -158,6 +158,8 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 
 - [Section 11.1 — Local Inventory Reservations and Release](docs/part-3/section-11-1-inventory-reservations.md)
 
+- [Section 11.2 — Local Inventory JWT Security](docs/part-3/section-11-2-inventory-security.md)
+
 ## Testing
 
 Run all .NET tests:

@@ -1,5 +1,7 @@
 # Section 11.1 — Local Inventory Stock, Reservations, and Release
 
+Section 11.2 now protects these operations with JWT scopes. The unauthenticated walkthrough below records Section 11.1; when running the current application, first follow [Section 11.2](section-11-2-inventory-security.md) and authorize with the appropriate local token.
+
 ## Scope
 
 Java owns inventory and reservation data. This milestone implements stock changes, atomic multi-product reservations, idempotent reservation/release behavior, and database concurrency protection. It does not yet connect Orders to Inventory or add service authentication. AWS remains unchanged and running.

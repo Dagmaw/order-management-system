@@ -495,3 +495,5 @@ crash.*.log
 
 
 .env.inventory.local
+# Local Inventory token signing material and generated tokens
+/.local-inventory-auth/

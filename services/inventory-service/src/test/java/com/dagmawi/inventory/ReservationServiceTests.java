@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties={"inventory.operations.enabled=true","springdoc.api-docs.enabled=true"})
-class ReservationServiceTests {
+class ReservationServiceTests extends InventoryJwtSupport {
     @Autowired ReservationService service;
     @Autowired JdbcTemplate jdbc;
     @LocalServerPort int port;
@@ -107,11 +107,11 @@ class ReservationServiceTests {
         var client=HttpClient.newHttpClient();var id=UUID.randomUUID();
         var body="{\"reservationId\":\""+id+"\",\"items\":[{\"productId\":100,\"quantity\":2}]}";
         var response=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/api/inventory/reservations"))
-                .timeout(Duration.ofSeconds(10)).header("Content-Type","application/json")
+                .timeout(Duration.ofSeconds(10)).header("Authorization","Bearer "+token("inventory.reserve")).header("Content-Type","application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body)).build(),HttpResponse.BodyHandlers.ofString());
         assertEquals(200,response.statusCode());assertTrue(response.body().contains("RESERVED"));
         var invalid=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/api/inventory/100/stock"))
-                .header("Content-Type","application/json").PUT(HttpRequest.BodyPublishers.ofString("{}"))
+                .header("Authorization","Bearer "+token("inventory.stock.write")).header("Content-Type","application/json").PUT(HttpRequest.BodyPublishers.ofString("{}"))
                 .build(),HttpResponse.BodyHandlers.ofString());
         assertEquals(400,invalid.statusCode());
         var doc=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/v3/api-docs")).GET().build(),HttpResponse.BodyHandlers.ofString());
