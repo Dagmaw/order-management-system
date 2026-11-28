@@ -2,7 +2,7 @@
 
 ## Status
 
-Prepared for review after the trusted main-branch API publication succeeded. No activation has been applied in this preparation step. The current Orders API remains on its earlier image until the reviewed Terraform rollout is approved.
+Deployed successfully in [run 46120849040](https://github.com/Dagmaw/order-management-system/actions/runs/46120849040) on 28 November 2026 after explicit IAM/rollout approval. The API is running task revision 3 with the reviewed image and private Inventory integration enabled. Both ECS deployments are completed at desired/running/pending 1/1/0. Section 13.7 records live public API checks; independent private stock/reservation evidence remains a following verification step.
 
 ## 1. Verified release prerequisites
 

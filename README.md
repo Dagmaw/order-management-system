@@ -174,7 +174,8 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 13.3 - Private Inventory Service Activation](docs/part-4/section-13-3-private-inventory-activation.md) - running privately in AWS; deployment observation permission corrected.
 - [Section 13.4 - Orders Database Prerequisite](docs/part-4/section-13-4-orders-database-prerequisite.md) - migrations completed in AWS; API integration remains disabled.
 - [Section 13.5 - Orders Inventory Release Preparation](docs/part-4/section-13-5-orders-inventory-release.md) - preparation merged; trusted API candidate published.
-- [Section 13.6 - Activate Orders to Private Inventory](docs/part-4/section-13-6-activate-orders-inventory.md) - published candidate pinned; IAM and rollout review pending.
+- [Section 13.6 - Activate Orders to Private Inventory](docs/part-4/section-13-6-activate-orders-inventory.md) - deployed successfully; both services healthy.
+- [Section 13.7 - Live AWS Orders Smoke Checks](docs/part-4/section-13-7-live-aws-orders-smoke.md) - public checks verified; independent private stock check pending.
 
 ## Testing
 
