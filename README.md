@@ -6,15 +6,15 @@ A layered .NET Order Management API and a separate Spring Boot Inventory Service
 
 - Products: creation, listing, retrieval, updates, and deletion with validation and conflict handling.
 - Users: business user records linked to separate Identity login accounts.
-- Orders: server-calculated totals, purchase-time price snapshots, and ownership checks.
+- Orders: server-calculated totals, purchase-time price snapshots, ownership checks, durable submissions, idempotency, and recovery.
 - Authentication: Customer registration, JWT login, and Customer/Admin permissions.
-- Inventory: PostgreSQL-backed stock lookup through Spring Data JPA and Hibernate, with Flyway schema migrations.
+- Inventory: PostgreSQL-backed lookup plus transactional stock reservation/release, version checks, scoped JWT security, and Flyway migrations.
 - Automated .NET service/API tests and Java service/endpoint tests.
 - Product request validation with FluentValidation.
 - Centralized Problem Details exception responses.
 - Serilog JSON logging with request correlation IDs.
 - AWS infrastructure as code: private RDS, VPC routing, ECR, ECS Fargate API/setup tasks, ALB, ACM HTTPS, Route 53, Secrets Manager, and CloudWatch logs.
-- GitHub OIDC authentication, image publishing, approved infrastructure changes, secret initialization, and database migration workflows.
+- GitHub OIDC authentication, image publishing, approved infrastructure changes, secret initialization, database migrations, and automatic read-only deployment verification.
 - Separate approved database setup operations for migrations, application-login configuration, and Admin assignment.
 
 ## Project Status
@@ -23,8 +23,8 @@ A layered .NET Order Management API and a separate Spring Boot Inventory Service
 |---|---|
 | Local Order API | PostgreSQL persistence, Identity/JWT, validation, and structured logging implemented |
 | Local Inventory Service | PostgreSQL persistence with JPA/Hibernate and Flyway implemented |
-| Service integration | Local integration available through optional Compose profile; AWS Order API remains independent |
-| CI | .NET and Java build/test jobs configured; successful runs recorded during the exercise |
+| Service integration | Local and AWS Orders-to-Inventory integration verified; private HTTPS, Cognito machine tokens, durable recovery and idempotent submissions |
+| CI | .NET, Java, isolated integration/recovery, and private stock-verifier checks passing |
 | AWS exercise | Rebuilt and deployed; migrations, application login, and controlled Admin assignment verified |
 | Public AWS API | HTTPS API on private Fargate behind ALB; public functional and task-replacement persistence checks passed |
 
@@ -63,9 +63,9 @@ Postman / HTTP client
 - **Infrastructure:** database access, migrations, and Identity implementation.
 - **API:** endpoints, authentication, authorization, and dependency registration.
 
-With the optional local integration profile, Orders reserves Inventory through authenticated service calls with durable recovery. AWS integration remains pending; see Section 12.3.
+The optional local integration profile uses local service tokens. In AWS, Orders uses Cognito client credentials to reserve stock over private HTTPS. Durable submission tracking and idempotent reservation/release support recovery across service boundaries. See Sections 12.3 and 13.6-13.9.
 
-The AWS exercise uses a separate private RDS database and a one-off ECS database setup task. Its public API architecture and cleanup history are documented in [Section 9.2](docs/part-2/section-09-2-aws-deployment.md).
+AWS uses separate logical Orders and Inventory databases/logins on the same private RDS instance, private Fargate services, a public API ALB and a private Inventory ALB, plus approved one-off setup/verification tasks. See the [current architecture](docs/part-5/architecture.md), [operations runbook](docs/part-5/operations-runbook.md), and [repeatable demo](docs/part-5/demo.md). Section 9.2 records the earlier deployment history.
 
 ## Quick Start
 
@@ -181,7 +181,7 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 
 ### Part 5
 
-- [Section 14 - Deployment Automation](docs/part-5/section-14-deployment-automation.md) - read-only post-apply gate prepared and live-checked; first workflow demonstration pending.
+- [Section 14 - Deployment Automation](docs/part-5/section-14-deployment-automation.md) - approved workflow demonstration passed all 17 read-only checks.
 
 ## Testing
 
@@ -235,3 +235,12 @@ README.md              Project home
 - AWS functional verification passed; production load, disaster recovery, and high availability testing remain outside this exercise. See Section 9.2.
 - AWS exercise resources remain running; review costs and the exact plan before any cleanup. Preserve the company domain and hosted zone.
 - Earlier section instructions are milestone records rather than a replacement for current configuration.
+
+## Operational handoff
+
+- [Section 15 - Handoff and Evidence](docs/part-5/section-15-operational-handoff.md)
+- [Current runtime and deployment diagrams](docs/part-5/architecture.md)
+- [Operations, incident triage, and recovery runbook](docs/part-5/operations-runbook.md)
+- [Read-only demo and controlled order-verification option](docs/part-5/demo.md)
+
+AWS resources remain running for the project. Historical section instructions describe their milestone; the current Terraform configuration and the handoff evidence describe the deployed system.
