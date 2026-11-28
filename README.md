@@ -167,6 +167,7 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 12.3 — Local Integrated Orders and Recovery](docs/part-3/section-12-3-local-integrated-orders.md)
 - [Section 12.4 — Automated Integration and Recovery Tests](docs/part-3/section-12-4-integration-recovery-tests.md)
 - [Section 12.5 — Orders Service Identity Adapter](docs/part-3/section-12-5-service-identity-adapter.md)
+- [Section 12.6 — Inventory Provider JWT Validation](docs/part-3/section-12-6-inventory-provider-jwt.md)
 
 ## Testing
 
@@ -215,7 +216,7 @@ README.md              Project home
 
 ## Current Limitations
 
-- Inventory integration is verified locally through Section 12.3; Java AWS deployment and the production identity-provider adapter remain pending. Initial inventory rows are Flyway seed data.
+- Inventory integration is verified locally through Section 12.3; Java AWS deployment and live identity-provider verification remain pending. Service-token adapters are documented in Sections 12.5 and 12.6. Initial inventory rows are Flyway seed data.
 - Authentication uses local accounts and JWTs; SSO and refresh tokens are not implemented.
 - AWS functional verification passed; production load, disaster recovery, and high availability testing remain outside this exercise. See Section 9.2.
 - AWS exercise resources remain running; review costs and the exact plan before any cleanup. Preserve the company domain and hosted zone.
