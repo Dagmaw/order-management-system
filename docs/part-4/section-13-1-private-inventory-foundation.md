@@ -4,7 +4,7 @@
 
 Section 12.7 verified real Cognito tokens between disposable Orders and Inventory applications. This section prepares the private AWS hosting foundation and production-ready Inventory health/TLS configuration.
 
-**Prepared, not deployed:** the live Terraform preview reports **28 additions, 0 changes, 0 deletions**. The user approved the Inventory IAM grants, and the scoped read/management policies are now installed. Foundation deployment has not been approved or applied. The Fargate service is intentionally inactive while `inventory_image` is empty. Existing Orders tasks, API image pin, application databases, and company-domain registration remain running and unchanged.
+**Foundation deployed:** the user approved the IAM policies and hosting cost, and Terraform run 46112603815 completed successfully with 28 additions, no changes, and no deletions. The scoped read/management policies are installed. The Fargate service is intentionally inactive while `inventory_image` is empty. Existing Orders tasks, API image pin, application databases, and company-domain registration remain running and unchanged.
 
 The deployment sequence is deliberate:
 
@@ -153,7 +153,7 @@ The baseline is a single Inventory task and a shared RDS instance. It does not y
 - AWS IAM Access Analyzer returned no findings for either proposed policy after correcting an invalid action during preparation.
 - All 35 Java tests passed, including anonymous health probes with hidden database details and unavailable management configuration endpoints.
 - The Linux Java image build passed all 35 tests, and all 20 disposable Orders/Inventory integration and recovery assertions passed.
-- Preparation initially installed no policies. After explicit user approval, the Inventory read/management policies were installed; no foundation resources have been applied.
+- Preparation initially installed no policies. After explicit user approval, the Inventory read/management policies were installed and the foundation apply completed successfully; see the deployment record below.
 
 Next work is private database bootstrap, image pinning/service activation, an in-VPC smoke-test mechanism, and then the reviewed Orders AWS integration. Keep current AWS resources running throughout this project.
 
@@ -163,4 +163,22 @@ The final runtime-image check caught and corrected certificate-directory travers
 
 The approved IAM bootstrap completed. The original combined apply document exceeded AWS's 6,144-character managed-policy limit. It was split by reusing the existing approved read policy on the apply role and keeping only management statements in the apply document. Comparing the combined statements with the reviewed original confirmed unchanged effective permissions.
 
-Starting the resource apply workflow was rejected by automatic approval review because the user had approved IAM changes only, not the 28 persistent foundation resources and recurring hosting cost. A plan-only main-branch workflow was started instead. Foundation creation still requires explicit deployment approval, followed by the repository's normal saved-plan/environment review.
+Starting the resource apply workflow was rejected by automatic approval review because the user had approved IAM changes only, not the 28 persistent foundation resources and recurring hosting cost. A plan-only main-branch workflow was started instead. The user subsequently approved deployment and completed the normal saved-plan/environment review. The successful foundation apply is recorded below.
+
+## 13. Foundation deployment record — November 28, 2026
+
+[Terraform run 46112603815](https://github.com/Dagmaw/order-management-system/actions/runs/46112603815) completed successfully on merged commit `40b85b111fc6999d0367f5aa5df327155341c9fa`. All 28 foundation resources were added without changing or destroying existing resources. The private saved plan was verified before apply and removed afterward.
+
+Post-apply checks confirmed the Inventory ALB has scheme `internal`, type `application`, and state `active`. The existing Orders API still returned `200 Healthy` at its public health endpoint.
+
+[Publish Inventory Image run 46113008933](https://github.com/Dagmaw/order-management-system/actions/runs/46113008933) completed successfully, including all 35 Java tests. The published image is pinned below for the later activation review. [Initialize Inventory Database Secret run 46113010939](https://github.com/Dagmaw/order-management-system/actions/runs/46113010939) also completed successfully and confirmed that dedicated Inventory credentials were initialized. The credential value was not printed.
+
+No Inventory ECS task/service is active because `inventory_image` remains empty. The next phase must create the dedicated database/login through a private one-off task before service activation. Initializing its secret alone does not create the database or user.
+
+Published Inventory image (record only; not activated):
+
+```
+638500336727.dkr.ecr.us-east-1.amazonaws.com/inventory-service@sha256:f087764bdec740e246f424a06b184dcd2b50236b5391ee48291c696f219a9c9e
+```
+
+Its commit tag is `40b85b111fc6999d0367f5aa5df327155341c9fa`. Do not set `inventory_image` to this digest until the database bootstrap phase succeeds.
