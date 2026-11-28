@@ -23,7 +23,8 @@
       "Action": [
         "secretsmanager:DescribeSecret",
         "secretsmanager:GetSecretValue",
-        "secretsmanager:ListSecretVersionIds"
+        "secretsmanager:ListSecretVersionIds",
+        "secretsmanager:GetResourcePolicy"
       ],
       "Effect": "Allow",
       "Resource": "arn:aws:secretsmanager:us-east-1:638500336727:secret:order-management/dev/orders-service-identity-*"
