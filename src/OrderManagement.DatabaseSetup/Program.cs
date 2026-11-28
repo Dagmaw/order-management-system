@@ -28,13 +28,20 @@ try
         IncludeErrorDetail = false
     };
 
+    var operation = Environment.GetEnvironmentVariable("DB_SETUP_OPERATION") ?? "migrate";
+    if (operation == "initialize-inventory")
+    {
+        await InventoryDatabaseBootstrap.InitializeAsync(connection,
+            Required("PGAPPUSER"), Required("PGAPPPASSWORD"));
+        return 0;
+    }
+
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
         .UseNpgsql(connection.ConnectionString)
         .Options;
 
     await using var database = new ApplicationDbContext(options);
 
-    var operation = Environment.GetEnvironmentVariable("DB_SETUP_OPERATION") ?? "migrate";
     if (operation == "grant-admin")
     {
         await GrantAdminAsync(database);
