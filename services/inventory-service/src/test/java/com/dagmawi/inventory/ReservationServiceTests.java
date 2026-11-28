@@ -65,7 +65,10 @@ class ReservationServiceTests extends InventoryJwtSupport {
         rejected(400,()->service.reserve(request(UUID.randomUUID(),0)));
         rejected(400,()->service.reserve(new ReserveInventoryRequest(UUID.randomUUID(),List.of(
                 new ReserveInventoryRequest.Item(100,1),new ReserveInventoryRequest.Item(100,1)))));
-        rejected(404,()->service.release(UUID.randomUUID()));
+        var cancelled=UUID.randomUUID();
+        assertEquals("RELEASED",service.release(cancelled).status());
+        rejected(409,()->service.reserve(request(cancelled,1)));
+        assertEquals(10,stock(100));
     }
     @Test void staleStockUpdateCannotOverwriteReservation() {
         service.reserve(request(UUID.randomUUID(),2));

@@ -1,4 +1,4 @@
-﻿using OrderManagement.Application.Interfaces;
+using OrderManagement.Application.Interfaces;
 using OrderManagement.Application.DTOs;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Application.Exceptions;
@@ -22,6 +22,13 @@ namespace OrderManagement.Application.Services
 
         public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto,
             CancellationToken cancellationToken = default)
+        {
+            var order = await PrepareOrderAsync(dto, cancellationToken);
+            var saved = await _orderRepository.AddAsync(order, cancellationToken);
+            return ToDto(saved);
+        }
+
+        public async Task<Order> PrepareOrderAsync(CreateOrderDto dto, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(dto);
             if (dto.UserId <= 0)
@@ -100,9 +107,7 @@ namespace OrderManagement.Application.Services
                 order.Items.Add(item);
                 order.TotalAmount += item.LineTotal;
             }
-            var SavedOrder = await _orderRepository.AddAsync(order, cancellationToken);
-
-            return ToDto(SavedOrder);
+            return order;
         }
 
         public async Task<OrderDto?> GetOrderByIdAsync(int id,

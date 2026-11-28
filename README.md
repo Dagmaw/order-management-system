@@ -23,7 +23,7 @@ A layered .NET Order Management API and a separate Spring Boot Inventory Service
 |---|---|
 | Local Order API | PostgreSQL persistence, Identity/JWT, validation, and structured logging implemented |
 | Local Inventory Service | PostgreSQL persistence with JPA/Hibernate and Flyway implemented |
-| Service integration | Orders and Inventory run independently |
+| Service integration | Local integration available through optional Compose profile; AWS Order API remains independent |
 | CI | .NET and Java build/test jobs configured; successful runs recorded during the exercise |
 | AWS exercise | Rebuilt and deployed; migrations, application login, and controlled Admin assignment verified |
 | Public AWS API | HTTPS API on private Fargate behind ALB; public functional and task-replacement persistence checks passed |
@@ -63,7 +63,7 @@ Postman / HTTP client
 - **Infrastructure:** database access, migrations, and Identity implementation.
 - **API:** endpoints, authentication, authorization, and dependency registration.
 
-The services currently run independently; Orders does not call Inventory.
+With the optional local integration profile, Orders reserves Inventory through authenticated service calls with durable recovery. AWS integration remains pending; see Section 12.3.
 
 The AWS exercise uses a separate private RDS database and a one-off ECS database setup task. Its public API architecture and cleanup history are documented in [Section 9.2](docs/part-2/section-09-2-aws-deployment.md).
 
@@ -164,6 +164,8 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 
 - [Section 12.2 — Durable Order Submission Tracking](docs/part-3/section-12-2-durable-submission-tracking.md)
 
+- [Section 12.3 — Local Integrated Orders and Recovery](docs/part-3/section-12-3-local-integrated-orders.md)
+
 ## Testing
 
 Run all .NET tests:
@@ -211,7 +213,7 @@ README.md              Project home
 
 ## Current Limitations
 
-- Inventory persists to PostgreSQL but does not integrate with Orders; its initial sample rows are Flyway seed data.
+- Inventory integration is verified locally through Section 12.3; Java AWS deployment and the production identity-provider adapter remain pending. Initial inventory rows are Flyway seed data.
 - Authentication uses local accounts and JWTs; SSO and refresh tokens are not implemented.
 - AWS functional verification passed; production load, disaster recovery, and high availability testing remain outside this exercise. See Section 9.2.
 - AWS exercise resources remain running; review costs and the exact plan before any cleanup. Preserve the company domain and hosted zone.

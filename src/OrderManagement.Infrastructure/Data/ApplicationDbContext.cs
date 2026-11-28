@@ -50,6 +50,7 @@ namespace OrderManagement.Infrastructure.Data
             submission.Property(row => row.RequestHash).IsRequired().HasMaxLength(64);
             submission.Property(row => row.SnapshotJson).IsRequired().HasMaxLength(65536);
             submission.Property(row => row.State).IsRequired().HasMaxLength(32);
+            submission.Property(row => row.FailureReason).HasMaxLength(240);
             submission.HasIndex(row => new { row.ActorAccountId, row.RequestKey }).IsUnique();
             submission.HasIndex(row => new { row.State, row.LeaseUntilUtc });
 
@@ -104,6 +105,7 @@ namespace OrderManagement.Infrastructure.Data
             order.ToTable("Orders");
 
             order.HasKey(o => o.Id);
+            order.HasIndex(o => o.InventorySubmissionId).IsUnique();
 
             order.Property(o => o.TotalAmount)
                 .HasPrecision(18, 2);

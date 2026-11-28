@@ -78,9 +78,12 @@ public class ReservationService {
     }
 
     public ReservationResponse release(UUID id) {
-        return transactions.execute(tx -> {
+        return transactionWithDuplicateRetry(() -> {
             var status=lockReservation(id);
-            if(status==null) throw error(404,"Reservation not found.");
+            if(status==null) {
+                jdbc.update("INSERT INTO inventory_reservation(reservation_id,status) VALUES (?, 'RELEASED')",id);
+                return new ReservationResponse(id,"RELEASED",List.of());
+            }
             var items=readItems(id);
             if(status.equals("RELEASED")) return new ReservationResponse(id,status,items);
             for(var item:items) {
