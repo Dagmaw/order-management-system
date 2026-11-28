@@ -62,3 +62,7 @@ Successful public order creation with the enabled production adapter, replay beh
 Next, prepare a narrowly scoped, approval-gated verification task inside the VPC to check reservation status and stock deltas. Use a dedicated verification path and short-lived machine token; do not retrieve the live Cognito client secret locally, open the private load balancer publicly, reuse the administrator database bootstrap task for convenience, or stop either service.
 
 The private check should establish exactly one reservation/stock decrement for one accepted logical order and none for the rejected order, without resetting shared state. Concurrent reservation, outage/recovery, deployment automation, and operational handoff remain separate milestones; isolated local/CI coverage must not be relabeled as completed AWS failure drills.
+
+## 6. Follow-up private verification completed
+
+The pending stock-delta verification subsequently passed inside AWS in [run 46124842279](https://github.com/Dagmaw/order-management-system/actions/runs/46124842279). Order 3, total 60.00, changed product 1 from 98/version 1 to 96/version 2; replay, conflict, and rejection snapshots remained 96/version 2. See Section 13.9 for the complete evidence and retained test records. The earlier public smoke results and corrected-probe history remain unchanged.
