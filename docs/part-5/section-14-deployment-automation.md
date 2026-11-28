@@ -1,8 +1,8 @@
-# Section 14 — Approved deployment with automatic read-only verification
+# Section 14 - Approved deployment with automatic read-only verification
 
 ## Status
 
-Implementation prepared and locally verified against the live development services. The post-apply workflow still needs its first approved main-branch run after merge. No new IAM permission, service, database, image pin, or network resource is proposed. The Terraform change adds a non-secret expectations output only.
+Completed in the approved main-branch [demonstration run 46126700549](https://github.com/Dagmaw/order-management-system/actions/runs/46126700549) on 28 November 2026. Apply reported zero resources added, changed, or destroyed; all 17 automatic checks passed and the sanitized artifact uploaded successfully. No application image pin or IAM permission changed.
 
 ## 1. Release contract
 
@@ -86,3 +86,9 @@ For future approved releases, these checks run automatically after apply. Delibe
 ## 8. Following handoff
 
 Prepare the final architecture/deployment diagrams, troubleshooting and rollback runbook, and repeatable demo with these verified workflow links. Keep isolated concurrency/outage coverage distinct from real AWS smoke evidence. The remaining career-practice goals belong to the broader 30-day plan and are not inferred complete from software deployment.
+
+## 9. Workflow demonstration evidence
+
+[Run 46126700549](https://github.com/Dagmaw/order-management-system/actions/runs/46126700549) passed validation, saved-plan review/application, non-secret output export, automatic verification, and artifact upload. All 17 checks passed under the GitHub OIDC Terraform apply role, not just a local profile.
+
+The [sanitized deployment-verification artifact](https://github.com/Dagmaw/order-management-system/actions/runs/46126700549/artifacts/15255847963) was uploaded successfully. Historical artifacts may expire according to GitHub retention; the run URL, checked source, and recorded outcomes remain the project evidence. This demonstration created no Customer, order, or reservation and changed no infrastructure resources.
