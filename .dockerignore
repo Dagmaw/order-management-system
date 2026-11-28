@@ -24,3 +24,8 @@ tests/
 
 .env.local
 .local-inventory-auth/
+
+.ci-integration
+artifacts
+
+.ci-e2e-run.log
