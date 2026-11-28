@@ -169,6 +169,10 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 12.5 — Orders Service Identity Adapter](docs/part-3/section-12-5-service-identity-adapter.md)
 - [Section 12.6 — Inventory Provider JWT Validation](docs/part-3/section-12-6-inventory-provider-jwt.md)
 - [Section 12.7 — Amazon Cognito Service Identity](docs/part-3/section-12-7-cognito-service-identity.md)
+
+  
+### Part 4
+
 - [Section 13.1 — Private Inventory Deployment Foundation](docs/part-4/section-13-1-private-inventory-foundation.md)
 - [Section 13.2 - Inventory Database Bootstrap](docs/part-4/section-13-2-inventory-database-bootstrap.md) - completed in AWS; dedicated database/login verified.
 - [Section 13.3 - Private Inventory Service Activation](docs/part-4/section-13-3-private-inventory-activation.md) - running privately in AWS; deployment observation permission corrected.
