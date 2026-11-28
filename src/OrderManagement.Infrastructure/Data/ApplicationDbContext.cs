@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using OrderManagement.Domain.Entities;
 using System.Data;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -20,6 +20,8 @@ namespace OrderManagement.Infrastructure.Data
 
         public DbSet<Order> Orders => Set<Order>();
 
+        public DbSet<OrderSubmission> OrderSubmissions => Set<OrderSubmission>();
+
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
 
@@ -40,6 +42,16 @@ namespace OrderManagement.Infrastructure.Data
 
             account.HasIndex(a => a.NormalizedEmail)
                 .IsUnique();
+
+            var submission = modelBuilder.Entity<OrderSubmission>();
+            submission.ToTable("OrderSubmissions");
+            submission.HasKey(row => row.Id);
+            submission.Property(row => row.ActorAccountId).IsRequired().HasMaxLength(450);
+            submission.Property(row => row.RequestHash).IsRequired().HasMaxLength(64);
+            submission.Property(row => row.SnapshotJson).IsRequired().HasMaxLength(65536);
+            submission.Property(row => row.State).IsRequired().HasMaxLength(32);
+            submission.HasIndex(row => new { row.ActorAccountId, row.RequestKey }).IsUnique();
+            submission.HasIndex(row => new { row.State, row.LeaseUntilUtc });
 
             // Products
             var product = modelBuilder.Entity<Product>();

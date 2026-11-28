@@ -162,6 +162,8 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 
 - [Section 12.1 — Local .NET-to-Java Client Foundation](docs/part-3/section-12-1-local-inventory-client.md)
 
+- [Section 12.2 — Durable Order Submission Tracking](docs/part-3/section-12-2-durable-submission-tracking.md)
+
 ## Testing
 
 Run all .NET tests:

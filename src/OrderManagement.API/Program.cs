@@ -126,6 +126,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<IOrderSubmissionStore, OrderSubmissionStore>();
+
 builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
