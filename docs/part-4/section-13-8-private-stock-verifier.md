@@ -4,7 +4,7 @@
 
 [Trusted verifier publication run 46123608516](https://github.com/Dagmaw/order-management-system/actions/runs/46123608516) succeeded. Section 13.9 now pins that image in the proposed private task and documents its review. AWS execution subsequently passed in [run 46124842279](https://github.com/Dagmaw/order-management-system/actions/runs/46124842279); Section 13.9 records the actual private snapshots.
 
-The verifier implementation, non-root image, isolated integration coverage, and manual trusted publishing workflow are prepared. AWS private verification has not run yet. No AWS task, IAM, security group, or live application configuration is changed by this implementation step.
+This section records the verifier implementation and isolated evidence. Image publication and private task deployment are complete; actual AWS verification passed as recorded in Section 13.9. The implementation PR itself changed no AWS resources.
 
 ## 1. Verification design
 
