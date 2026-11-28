@@ -4,7 +4,7 @@
 
 Section 12.7 verified real Cognito tokens between disposable Orders and Inventory applications. This section prepares the private AWS hosting foundation and production-ready Inventory health/TLS configuration.
 
-**Prepared, not deployed:** the live Terraform preview reports **28 additions, 0 changes, 0 deletions**. No Inventory IAM grants have been installed. The Fargate service is intentionally inactive while `inventory_image` is empty. Existing Orders tasks, API image pin, application databases, and company-domain registration remain running and unchanged.
+**Prepared, not deployed:** the live Terraform preview reports **28 additions, 0 changes, 0 deletions**. The user approved the Inventory IAM grants, and the scoped read/management policies are now installed. Foundation deployment has not been approved or applied. The Fargate service is intentionally inactive while `inventory_image` is empty. Existing Orders tasks, API image pin, application databases, and company-domain registration remain running and unchanged.
 
 The deployment sequence is deliberate:
 
@@ -87,7 +87,7 @@ After explicit approval:
 ./scripts/initialize-inventory-permissions.ps1 -Profile order-management-dev
 ```
 
-The script verifies account 638500336727, creates one named managed policy for each existing Terraform role, and attaches it. It fails instead of overwriting an existing policy whose contents differ. Do not replace a denied permission with AdministratorAccess.
+The script verifies account 638500336727 and creates two named managed policies. The plan role receives the read policy; the apply role receives both the read and management policies. Reusing the read policy keeps each document within the 6,144-character IAM quota without changing effective permissions. It fails instead of overwriting an existing policy whose contents differ. Do not replace a denied permission with AdministratorAccess.
 
 ## 6. Deploy only the foundation
 
@@ -153,8 +153,14 @@ The baseline is a single Inventory task and a shared RDS instance. It does not y
 - AWS IAM Access Analyzer returned no findings for either proposed policy after correcting an invalid action during preparation.
 - All 35 Java tests passed, including anonymous health probes with hidden database details and unavailable management configuration endpoints.
 - The Linux Java image build passed all 35 tests, and all 20 disposable Orders/Inventory integration and recovery assertions passed.
-- No Inventory IAM policy was installed and no foundation resources were applied.
+- Preparation initially installed no policies. After explicit user approval, the Inventory read/management policies were installed; no foundation resources have been applied.
 
 Next work is private database bootstrap, image pinning/service activation, an in-VPC smoke-test mechanism, and then the reviewed Orders AWS integration. Keep current AWS resources running throughout this project.
 
 The final runtime-image check caught and corrected certificate-directory traversal permissions. The Dockerfile now checks CA readability after switching to the non-root application user, and the rebuilt image passed that check.
+
+## 12. IAM installation and deployment approval status
+
+The approved IAM bootstrap completed. The original combined apply document exceeded AWS's 6,144-character managed-policy limit. It was split by reusing the existing approved read policy on the apply role and keeping only management statements in the apply document. Comparing the combined statements with the reviewed original confirmed unchanged effective permissions.
+
+Starting the resource apply workflow was rejected by automatic approval review because the user had approved IAM changes only, not the 28 persistent foundation resources and recurring hosting cost. A plan-only main-branch workflow was started instead. Foundation creation still requires explicit deployment approval, followed by the repository's normal saved-plan/environment review.
