@@ -2,7 +2,7 @@
 
 ## Status
 
-Prepared for IAM/network/task review. The verifier image is published; the AWS verification task has not been deployed or run. Both application services remain running.
+Completed in AWS on 28 November 2026. [Infrastructure deployment 46124194238](https://github.com/Dagmaw/order-management-system/actions/runs/46124194238) and [private verification 46124842279](https://github.com/Dagmaw/order-management-system/actions/runs/46124842279) both succeeded after explicit approval. The verifier exited with code 0; both application services remained running and stable. The review/deployment instructions below record the completed procedure.
 
 [Publication run 46123608516](https://github.com/Dagmaw/order-management-system/actions/runs/46123608516) passed the isolated checks and published the verifier from source commit `ade200dc260805ea1593cfee2779510118ce0b66`:
 
@@ -38,7 +38,7 @@ The workflow role trusts only the repository's immutable GitHub identity with th
 
 Two supplemental Terraform policy files add metadata/lifecycle access for this task-definition family and PassRole only for these two task roles. Existing project-scoped Terraform permissions manage the Inventory-prefixed roles/log group and VPC security groups. The supplements are installed with `scripts/initialize-inventory-verification-permissions.ps1`, which checks the account and refuses a differing existing policy rather than overwriting it.
 
-These new permissions and network/task resources require review and approval before installation or apply. They have not been installed in this preparation step.
+These new permissions and network/task resources require review and approval before installation or apply. The reviewed supplements were installed before the approved deployment.
 
 ## 3. Validation performed
 
@@ -86,4 +86,34 @@ If the task fails after order creation, inspect the saved order ID and private l
 
 There is no continuously running verification service. Execution incurs one-off Fargate, log, image-storage, and network usage. The application services keep their current task counts and running costs.
 
-The AWS stock/idempotency milestone is complete only when this real private task passes and its actual snapshots are recorded. Outage drills, concurrent load testing, complete deployment automation, and operational handoff remain separate work.
+The real private task passed and its actual snapshots are recorded below, completing this controlled AWS stock/idempotency verification. Outage drills, concurrent load testing, complete deployment automation, and operational handoff remain separate work.
+
+## 7. Actual AWS completion evidence
+
+Verification workflow: [46124842279](https://github.com/Dagmaw/order-management-system/actions/runs/46124842279).
+
+- Task definition: `order-management-dev-inventory-verification:1`.
+- Task ID: `3bdbcf2dadc64392966259b1308b2df9`.
+- Container: `inventory-verification`, STOPPED with exit code 0.
+- Report run ID: `a57ec353580e40e9a2b742e429e913c7`.
+- Mode/result: `aws-private`, passed true.
+- Accepted order: **3**, total **60.00**, two units of product 1.
+- The launcher's evidence gate accepted the successful report and required all verifier assertions to pass.
+
+| Actual private snapshot | Available quantity | Version |
+| --- | --- | --- |
+| Initial / before order | 98 | 1 |
+| After accepted order | 96 | 2 |
+| After same-key replay | 96 | 2 |
+| After changed-payload conflict | 96 | 2 |
+| After insufficient-stock rejection | 96 | 2 |
+
+This independently verifies a two-unit decrement with one version increment, no duplicate decrement on replay, and no stock/version change from the conflict or compensated rejection. It does not inspect database reservation rows directly.
+
+Post-run ECS checks confirmed both `order-management-dev-api` and `order-management-dev-inventory` at desired/running/pending **1/1/0**, with completed deployments. The one-off verifier stopped normally. No live machine/database secret was retrieved, no stock was reset, and neither application service was stopped.
+
+The fresh verification Customer, accepted order 3 and its reservation, and compensated rejected submission remain in development as audit data. Product 1 now has 96 available units in this recorded snapshot. Future legitimate orders may change that value; do not treat 96 as a permanent fixture assertion.
+
+## 8. Following milestone
+
+Complete deployment automation and operational handoff: make approved image promotion repeatable, wait for service stability, run bounded readiness/smoke checks, and retain sanitized evidence. Preserve the distinction between this successful controlled AWS run and isolated concurrency/outage/recovery coverage. No AWS outage drill or load test was performed in this milestone.
