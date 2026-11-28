@@ -8,13 +8,14 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/inventory")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name="InventoryBearer")
 @ConditionalOnProperty(name="inventory.operations.enabled",havingValue="true")
 public class InventoryOperationsController {
     private final ReservationService service;
     public InventoryOperationsController(ReservationService service) { this.service=service; }
 
     @PutMapping("/{productId}/stock")
-    @Operation(summary="Set available stock with an expected version",description="Local milestone: authentication is not implemented yet. Stale versions return 409.")
+    @Operation(summary="Set available stock with an expected version",description="Requires inventory.stock.write scope. Stale versions return 409.")
     public InventoryResponse update(@PathVariable long productId,@RequestBody StockUpdateRequest request) {
         return service.updateStock(productId,request);
     }

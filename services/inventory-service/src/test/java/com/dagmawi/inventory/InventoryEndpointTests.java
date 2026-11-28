@@ -21,7 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-class InventoryEndpointTests {
+class InventoryEndpointTests extends InventoryJwtSupport {
 
     @LocalServerPort
     private int port;

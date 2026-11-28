@@ -6,7 +6,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
 @SpringBootTest
-class InventoryServiceApplicationTests {
+class InventoryServiceApplicationTests extends InventoryJwtSupport {
 
 	@Test
 	void contextLoads() {
