@@ -1,7 +1,7 @@
-# Keep blank for foundation-only apply. Set an immutable digest only after DB bootstrap and image publication.
+# Section 13.3: published image; database bootstrap verified by run 46116062115.
 variable "inventory_image" {
   type    = string
-  default = ""
+  default = "638500336727.dkr.ecr.us-east-1.amazonaws.com/inventory-service@sha256:f087764bdec740e246f424a06b184dcd2b50236b5391ee48291c696f219a9c9e"
   validation {
     condition     = var.inventory_image == "" || can(regex("^638500336727\\.dkr\\.ecr\\.us-east-1\\.amazonaws\\.com/inventory-service@sha256:[a-f0-9]{64}$", var.inventory_image))
     error_message = "Inventory image must be an immutable digest in the project Inventory repository."

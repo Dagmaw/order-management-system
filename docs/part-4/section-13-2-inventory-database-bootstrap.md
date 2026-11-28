@@ -2,7 +2,7 @@
 
 ## Current status
 
-Section 13.1 is deployed. The private endpoint, secret metadata, credentials, and Inventory image exist. The Java service is not running in AWS yet. The database bootstrap implementation is merged and its isolated tests passed. The updated DatabaseSetup image is published. A separate private task, scoped IAM roles, and approval-gated launch workflow are prepared for review; they have not been applied or run against RDS.
+Completed in AWS on 28 November 2026. [Terraform deployment](https://github.com/Dagmaw/order-management-system/actions/runs/46115819153) succeeded with six additions, zero changes, and zero deletions. [Private database bootstrap](https://github.com/Dagmaw/order-management-system/actions/runs/46116062115) succeeded with container exit code 0 and verified the dedicated Inventory database/login over a certificate-verified connection. Java service activation is the next section.
 
 ## 1. What the bootstrap does
 
@@ -98,3 +98,14 @@ The six resources add no continuously running task. Executing bootstrap incurs o
 - Live preview confirmed exactly six bootstrap additions and no updates or deletions.
 - Five offline launcher checks passed: fixed task/private network/no secret overrides, incorrect task rejection, incorrect account rejection, failed exit rejection, and status inspection after waiter failure.
 - The merged bootstrap implementation already passed disposable TLS PostgreSQL 18 checks, including non-superuser execution, concurrency, isolation, repeat runs, certificate hostname rejection, and foreign ownership protection.
+
+## 6. Completion evidence
+
+- Task definition: `order-management-dev-inventory-bootstrap:1`.
+- Task: `8663f311aef049f08b8471971862a23b` in cluster `order-management-dev`.
+- Container status: STOPPED, exit code 0.
+- Success output: `Inventory database and dedicated login verified by the bootstrap task.`
+- Three non-secret workflow settings were configured in the `terraform-dev` GitHub environment from Terraform outputs.
+- No live administrator or Inventory database credentials were retrieved locally.
+
+The preparation instructions above record the deployment sequence. Their approval and execution steps are now complete. Proceed to Section 13.3 for Java activation; the Orders integration deployment remains separate.
