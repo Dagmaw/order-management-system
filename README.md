@@ -246,3 +246,35 @@ README.md              Project home
 AWS resources remain running for the project. Historical section instructions describe their milestone; the current Terraform configuration and the handoff evidence describe the deployed system.
 
 - [Section 16 - Private Inventory Swagger tunnel](docs/part-5/section-16-inventory-session-tunnel.md)
+
+## Access Inventory Swagger from Windows
+
+Inventory is private. Use Docker Desktop with Linux containers and the tunnel script to open a dedicated Chrome window:
+
+```powershell
+cd D:\Docs\30dayPlan\order-management-system
+.\scripts\Start-InventorySwaggerTunnel.ps1
+```
+
+If PowerShell reports that running scripts is disabled, allow local scripts for the current terminal session, then retry:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\scripts\Start-InventorySwaggerTunnel.ps1
+```
+
+The process setting ends when that terminal closes. Organization-managed Group Policy may override it; use `Get-ExecutionPolicy -List` to inspect the effective scopes.
+
+Use the Chrome window opened by the script for [Inventory Swagger](https://inventory.dev.internal.kaddigitalsolutions.com/swagger-ui/index.html). Ordinary browser windows cannot resolve the private hostname. The script verifies the HTTPS certificate before opening Chrome.
+
+The current script supports Windows PowerShell 5.1: container ownership is checked using Docker JSON instead of a quoted Go template. If an older copy reports `function "oms" not defined`, update to the corrected script.
+
+When finished:
+
+```powershell
+.\scripts\Stop-InventorySwaggerTunnel.ps1
+```
+
+This stops the local tunnel and its EC2 helper. API, Inventory, database and existing network resources stay running. A stopped helper still retains its small billed EBS volume.
+
+For the instance ID/settings file, role permissions, cost estimate and troubleshooting, see [Section 16](docs/part-5/section-16-inventory-session-tunnel.md).
