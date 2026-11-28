@@ -8,15 +8,31 @@ namespace OrderManagement.Infrastructure.Inventory;
 
 public static class InventoryRegistration
 {
-    public static IServiceCollection AddLocalInventoryClient(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    public static IServiceCollection AddInventoryClient(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         if (!configuration.GetValue<bool>("Inventory:Enabled")) return services;
-        if (!environment.IsDevelopment())
-            throw new InvalidOperationException("Local Inventory token issuance is allowed only in Development. Configure a production identity provider before AWS integration.");
+        var mode = configuration.GetValue<string>("Inventory:AuthenticationMode") ?? "LocalRsa";
+        if (mode is not ("LocalRsa" or "ClientCredentials"))
+            throw new InvalidOperationException("Inventory authentication mode must be LocalRsa or ClientCredentials.");
+        if (mode == "LocalRsa" && !environment.IsDevelopment())
+            throw new InvalidOperationException("Local Inventory token issuance is allowed only in Development.");
         services.AddOptions<InventoryClientOptions>().Bind(configuration.GetSection("Inventory"))
-            .Validate(options => options.IsValid(), "Configure a valid Inventory base URL, timeout, issuer, audience, and private-key file.")
+            .Validate(options => options.IsValid(), "Configure valid Inventory connection and authentication settings.")
+            .Validate(options => environment.IsDevelopment() || InventoryClientOptions.IsHttpsEndpoint(options.BaseUrl),
+                "Inventory requires HTTPS outside Development.")
             .ValidateOnStart();
-        services.AddSingleton<IInventoryServiceTokenProvider, InventoryServiceTokenProvider>();
+        if (mode == "LocalRsa")
+            services.AddSingleton<IInventoryServiceTokenProvider, InventoryServiceTokenProvider>();
+        else
+        {
+            services.AddSingleton<TimeProvider>(TimeProvider.System);
+            services.AddHttpClient(OAuthInventoryTokenProvider.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+                client.MaxResponseContentBufferSize = 64 * 1024;
+            }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            services.AddSingleton<IInventoryServiceTokenProvider, OAuthInventoryTokenProvider>();
+        }
         services.AddScoped<OrderSubmissionCoordinator>();
         services.AddHostedService<SubmissionRecoveryWorker>();
         services.AddHttpClient<IInventoryClient, InventoryHttpClient>((provider, client) =>

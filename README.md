@@ -166,6 +166,7 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 
 - [Section 12.3 — Local Integrated Orders and Recovery](docs/part-3/section-12-3-local-integrated-orders.md)
 - [Section 12.4 — Automated Integration and Recovery Tests](docs/part-3/section-12-4-integration-recovery-tests.md)
+- [Section 12.5 — Orders Service Identity Adapter](docs/part-3/section-12-5-service-identity-adapter.md)
 
 ## Testing
 

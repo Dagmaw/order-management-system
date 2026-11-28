@@ -44,13 +44,16 @@ public sealed class InventoryHttpClient(HttpClient http, IInventoryServiceTokenP
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
         deadline.CancelAfter(TimeSpan.FromSeconds(options.Value.TimeoutSeconds));
         using var request = new HttpRequestMessage(method, path);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.CreateToken());
+
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         request.Headers.Add("X-Correlation-ID", Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"));
         if (body is not null) request.Content = JsonContent.Create(body);
+        var sent = false;
         try
         {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await tokens.GetTokenAsync(deadline.Token));
             // No automatic POST retry: a timeout can occur after the server commits.
+            sent = true;
             using var response = await http.SendAsync(request, HttpCompletionOption.ResponseContentRead, deadline.Token);
             if (method == HttpMethod.Get && response.StatusCode == HttpStatusCode.NotFound) return null;
             if (!response.IsSuccessStatusCode)
@@ -70,7 +73,7 @@ public sealed class InventoryHttpClient(HttpClient http, IInventoryServiceTokenP
                 throw new InventoryUnavailableException(true);
             return result;
         }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested) { throw new InventoryUnavailableException(method != HttpMethod.Get); }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested) { throw new InventoryUnavailableException(sent && method != HttpMethod.Get); }
         catch (HttpRequestException) { throw new InventoryUnavailableException(method != HttpMethod.Get); }
         catch (JsonException) { throw new InventoryUnavailableException(method != HttpMethod.Get); }
         catch (NotSupportedException) { throw new InventoryUnavailableException(method != HttpMethod.Get); }

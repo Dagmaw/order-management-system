@@ -59,7 +59,7 @@ if (useReverseProxy)
 
 builder.Services.AddHealthChecks();
 
-OrderManagement.Infrastructure.Inventory.InventoryRegistration.AddLocalInventoryClient(
+OrderManagement.Infrastructure.Inventory.InventoryRegistration.AddInventoryClient(
     builder.Services, builder.Configuration, builder.Environment);
 
 builder.Services.AddSerilog((services, configuration) =>
