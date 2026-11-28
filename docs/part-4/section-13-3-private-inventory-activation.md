@@ -2,7 +2,7 @@
 
 ## Status
 
-Prepared for review. Section 13.2 completed successfully in AWS. This section starts the existing Java Inventory image as a continuously running private ECS service. Do not apply until the added running cost is approved.
+Running privately in AWS as of 28 November 2026, following explicit running-cost approval. The initial apply created the service but failed its deployment observation check because a read permission was missing. The scoped permission correction is installed; the verified healthy service was preserved and its failed-wait replacement marker cleared. The steps below document deployment and recovery.
 
 ## 1. Prerequisites and completed evidence
 
@@ -72,3 +72,30 @@ This private hostname is intended for the VPC. A browser or Postman session outs
 ## 7. Following milestone
 
 After private Java hosting is healthy, prepare the Orders database migrations, service-token configuration, private Inventory base URL, and updated .NET image as a separate reviewed deployment. Hosting Java by itself does not mean the running Orders API is reserving stock through it yet.
+
+## 8. Deployment permission correction and recovery
+
+The first activation run [46116859275](https://github.com/Dagmaw/order-management-system/actions/runs/46116859275) created the task definition and ECS service, then failed while waiting for stability: `ecs:ListServiceDeployments` was absent from the Terraform apply role. This was a deployment-observation permission failure, not a failed Java startup.
+
+The correction is `infra/iam/inventory-deployment-read.json`, installed through `scripts/initialize-inventory-deployment-read.ps1`. It grants only `ecs:ListServiceDeployments`, `ecs:DescribeServiceDeployments`, and `ecs:DescribeServiceRevisions`, scoped to this Inventory service and its deployment/revision ARNs. It is attached only to `order-management-dev-terraform-apply`. It grants no task mutation or secret access. These scopes follow the [AWS deployment-viewing permission reference](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-deployment-permissions.html). The installer verifies the account and refuses to overwrite a differing existing policy.
+
+### Verified runtime evidence
+
+- Service: `order-management-dev-inventory` in cluster `order-management-dev`.
+- Desired/running/pending: 1 / 1 / 0.
+- Deployment state: COMPLETED, using task definition `order-management-dev-inventory:1`.
+- Target group: healthy on private task port 8080.
+- Flyway: two migrations validated and applied successfully, schema version v2.
+- Existing Orders API: `/health` returned HTTP 200 and `Healthy`.
+- IAM simulation: the Terraform apply role is allowed to list deployments for this exact Inventory service.
+
+### Preserve the service after a failed wait
+
+1. Check ECS service events, task status, load-balancer target health, and startup logs. Do not assume a failed Terraform waiter means service creation failed.
+2. Confirm the live service is the intended service, uses the intended task definition, has completed its deployment, and passes readiness.
+3. Inspect the state for `aws_ecs_service.inventory[0]`. This failure marked it tainted even though the remote service was healthy.
+4. Only after those checks, clear that marker with `terraform untaint 'aws_ecs_service.inventory[0]'`. This changes the state marker only; it does not restart or recreate the service.
+5. Run a fresh plan, rather than retrying the old saved plan. Recovery verification uses [run 46117296782](https://github.com/Dagmaw/order-management-system/actions/runs/46117296782).
+6. Require the fresh plan to report no infrastructure changes. Investigate any unexpected replacement before approving an apply.
+
+Do not rerun the failed job with the stale saved activation plan, delete the service, or disable stability checks to work around a missing read permission. Orders-to-Inventory integration in AWS remains the following milestone.
