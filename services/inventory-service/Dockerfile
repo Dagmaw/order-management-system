@@ -3,11 +3,13 @@ FROM eclipse-temurin:25-jdk AS build
 WORKDIR /workspace
 
 COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
+COPY mvnw bootstrap-maven.sh pom.xml ./
 COPY src/ src/
 
-RUN sed -i 's/\r$//' mvnw \
-    && sh ./mvnw --batch-mode clean verify
+RUN --mount=type=cache,target=/root/.m2 \
+    sed -i 's/\r$//' mvnw bootstrap-maven.sh \
+    && sh ./bootstrap-maven.sh \
+    && sh ./mvnw --batch-mode --no-transfer-progress clean verify
 
 FROM eclipse-temurin:25-jre AS final
 

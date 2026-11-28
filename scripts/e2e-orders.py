@@ -152,6 +152,7 @@ def main():
     ENV.update(E2E_DB_PASSWORD=secrets.token_hex(24), E2E_USER_KEY=base64.b64encode(secrets.token_bytes(48)).decode(),
                E2E_PUBLIC_KEY=base64.b64encode(public).decode(), E2E_KEY_PATH=private.as_posix())
     ok = False
+    verification = None
     try:
         dc('up', '-d', '--wait', 'order-db', 'inventory-db')
         dc('run', '--rm', 'migrate')
@@ -159,6 +160,9 @@ def main():
         dc('exec', '-T', 'order-db', 'psql', '-v', 'ON_ERROR_STOP=1', '-U', 'e2e', '-d', 'orders', input=sql)
         dc('up', '-d', '--build', 'api', 'inventory')
         tests()
+        from verify_private_orders import run_verification
+        verification = run_verification(base('api'), base('inventory'), local=True)
+        expect('Private stock verifier passes against isolated services', verification['passed'])
         ok = True
     finally:
         try:
@@ -167,7 +171,7 @@ def main():
             private.unlink(missing_ok=True)
             report = ROOT / 'artifacts' / 'e2e-results.json'
             report.parent.mkdir(exist_ok=True)
-            report.write_text(json.dumps({'passed': ok, 'checks': RESULTS}, indent=2) + '\n')
+            report.write_text(json.dumps({'passed': ok, 'checks': RESULTS, 'privateStockVerification': verification}, indent=2) + '\n')
     return 0
 
 
