@@ -6,7 +6,7 @@ This milestone selects Amazon Cognito for machine-to-machine identity, adds its 
 
 Prepared resources are a dedicated service user pool, its OAuth domain, an Inventory resource server, a confidential Orders client, a Secrets Manager secret/version, and a narrowly scoped GitHub verification role/policy. Existing Customer login, ECS API image, RDS databases, DNS, and running services are unchanged.
 
-The live Terraform preview shows **8 additions, 0 changes, 0 deletions**. Resources are not yet applied. The user approved the IAM bootstrap and it is now installed; the saved Terraform apply is waiting at the existing GitHub environment reviewer gate. The real Cognito exchange remains unverified until the deployment steps below complete. Do not mark this milestone deployed based only on local tests.
+The live Terraform preview shows **8 additions, 0 changes, 0 deletions**. The initial apply created the Cognito pool, domain, resource server, Orders client, verification role, and secret metadata, then stopped on a missing dedicated-secret read permission. That permission is corrected; a fresh recovery plan is being generated to finish the remaining resources. The real Cognito exchange remains unverified until the deployment steps below complete. Do not mark this milestone deployed based only on local tests.
 
 ## 2. Cost before deployment
 
@@ -131,3 +131,11 @@ After real-provider verification passes, deploy Java privately with its own data
 - AWS IAM Access Analyzer reported no policy-validation errors for either proposed bootstrap policy. The PowerShell bootstrap and Python verification runner passed syntax checks.
 - The existing state bucket was verified to have all four public-access blocks enabled.
 - Initial preparation applied no Cognito resources or IAM grants. After explicit user approval, the IAM bootstrap was installed and the main-branch plan passed. Terraform run 46106189535 now holds the private saved plan and awaits the `terraform-dev` deployment approval. Real Cognito token exchange remains pending that apply and the manual verification workflow.
+
+## 12. Recovery after the first apply
+
+The initial approved apply stopped when Terraform tried to read the dedicated secret's resource policy. The existing secret read statement now includes `secretsmanager:GetResourcePolicy` in both approved Terraform-role policies, restricted to the same dedicated secret ARN pattern.
+
+The failure left the secret in state with a taint marker despite successful creation. Its AWS metadata and Terraform attributes were verified, then only that marker was cleared with `terraform untaint aws_secretsmanager_secret.orders_service_identity`. No secret was deleted or recreated. The intermediate recovery run was cancelled before applying its stale plan, and a fresh saved-plan run was started from repaired state.
+
+Do not rerun the original failed apply job: its binary plan is stale after the partial apply and state repair. Review the new plan and require no deletions or replacements of the already-created resources. The expected remaining additions are the secret version and verification role's inline policy.
