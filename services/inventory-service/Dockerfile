@@ -15,6 +15,8 @@ WORKDIR /app
 
 COPY --from=build /workspace/target/*.jar /app/app.jar
 
+ADD --chmod=444 https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /app/certs/global-bundle.pem
+
 EXPOSE 8080
 
 USER 10001:10001
