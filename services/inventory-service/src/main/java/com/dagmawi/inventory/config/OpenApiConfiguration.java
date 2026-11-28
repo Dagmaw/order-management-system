@@ -12,7 +12,7 @@ public class OpenApiConfiguration {
         return new OpenAPI().info(new Info()
                 .title("Inventory Service API")
                 .version("v1")
-                .description("PostgreSQL-backed inventory lookup. Reservation and release operations are planned; "
-                        + "they are not implemented in this milestone. This service does not yet enforce JWT authentication."));
+                .description("PostgreSQL-backed inventory lookup. Reservation and stock operations are enabled only by explicit local configuration. "
+                        + "This service does not yet enforce JWT authentication."));
     }
 }
