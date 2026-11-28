@@ -171,7 +171,7 @@ Starting the resource apply workflow was rejected by automatic approval review b
 
 Post-apply checks confirmed the Inventory ALB has scheme `internal`, type `application`, and state `active`. The existing Orders API still returned `200 Healthy` at its public health endpoint.
 
-[Publish Inventory Image run 46113008933](https://github.com/Dagmaw/order-management-system/actions/runs/46113008933) completed successfully, including all 35 Java tests. The published image is pinned below for the later activation review. [Initialize Inventory Database Secret run 46113010939](https://github.com/Dagmaw/order-management-system/actions/runs/46113010939) is waiting at its environment review gate; credential initialization is not yet claimed as complete.
+[Publish Inventory Image run 46113008933](https://github.com/Dagmaw/order-management-system/actions/runs/46113008933) completed successfully, including all 35 Java tests. The published image is pinned below for the later activation review. [Initialize Inventory Database Secret run 46113010939](https://github.com/Dagmaw/order-management-system/actions/runs/46113010939) also completed successfully and confirmed that dedicated Inventory credentials were initialized. The credential value was not printed.
 
 No Inventory ECS task/service is active because `inventory_image` remains empty. The next phase must create the dedicated database/login through a private one-off task before service activation. Initializing its secret alone does not create the database or user.
 
