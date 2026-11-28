@@ -1,0 +1,37 @@
+name: Run Inventory Database Bootstrap
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: inventory-bootstrap-dev
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: terraform-dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Assume the scoped bootstrap workflow role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::638500336727:role/order-management-dev-inventory-bootstrap-workflow
+          aws-region: us-east-1
+      - name: Run the fixed private bootstrap task
+        env:
+          AWS_PAGER: ""
+          INVENTORY_BOOTSTRAP_TASK_DEFINITION: ${{ vars.INVENTORY_BOOTSTRAP_TASK_DEFINITION }}
+          INVENTORY_BOOTSTRAP_SUBNET_IDS: ${{ vars.INVENTORY_BOOTSTRAP_SUBNET_IDS }}
+          INVENTORY_BOOTSTRAP_SECURITY_GROUP_ID: ${{ vars.INVENTORY_BOOTSTRAP_SECURITY_GROUP_ID }}
+        run: python3 scripts/run-inventory-bootstrap.py

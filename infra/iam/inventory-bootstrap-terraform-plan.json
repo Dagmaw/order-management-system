@@ -1,0 +1,14 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadInventoryBootstrapDefinition",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeTaskDefinition",
+        "ecs:ListTagsForResource"
+      ],
+      "Resource": "arn:aws:ecs:us-east-1:638500336727:task-definition/order-management-dev-inventory-bootstrap:*"
+    }
+  ]
+}
