@@ -504,3 +504,6 @@ crash.*.log
 /artifacts/
 
 /.ci-e2e-run.log
+
+# Local tunnel settings and isolated browser profile
+.local-inventory-tunnel/

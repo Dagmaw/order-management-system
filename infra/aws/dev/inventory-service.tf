@@ -34,7 +34,8 @@ resource "aws_ecs_task_definition" "inventory" {
       { name = "INVENTORY_JWT_ALLOWED_CLIENT_IDS", value = aws_cognito_user_pool_client.orders_service.id },
       { name = "INVENTORY_JWT_RESERVATION_SCOPE", value = "inventory/reserve" },
       { name = "INVENTORY_JWT_STOCK_SCOPE", value = "inventory/stock.write" },
-      { name = "API_DOCS_ENABLED", value = "false" }
+      { name = "API_DOCS_ENABLED", value = "true" },
+      { name = "SERVER_FORWARD_HEADERS_STRATEGY", value = "framework" }
     ],
     secrets = [
       { name = "SPRING_DATASOURCE_USERNAME", valueFrom = "${aws_secretsmanager_secret.inventory_database.arn}:username::" },
