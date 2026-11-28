@@ -1,0 +1,69 @@
+# Isolated stack: no env_file, external volumes, or AWS credentials.
+services:
+  order-db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: e2e
+      POSTGRES_DB: orders
+      POSTGRES_PASSWORD: ${E2E_DB_PASSWORD:?}
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U e2e -d orders"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  inventory-db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: e2e
+      POSTGRES_DB: inventory
+      POSTGRES_PASSWORD: ${E2E_DB_PASSWORD:?}
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U e2e -d inventory"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  migrate:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile.migrations
+    working_dir: /workspace
+    environment:
+      OMS_MIGRATION_CONNECTION: Host=order-db;Database=orders;Username=e2e;SSL Mode=Disable
+      PGPASSWORD: ${E2E_DB_PASSWORD:?}
+    command: [sh, -c, "dotnet tool restore && dotnet restore src/OrderManagement.API/OrderManagement.API.csproj && dotnet ef database update --project src/OrderManagement.Infrastructure --startup-project src/OrderManagement.API"]
+  inventory:
+    build: ./services/inventory-service
+    ports: ["127.0.0.1::8080"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db:5432/inventory
+      SPRING_DATASOURCE_USERNAME: e2e
+      SPRING_DATASOURCE_PASSWORD: ${E2E_DB_PASSWORD:?}
+      INVENTORY_OPERATIONS_ENABLED: "true"
+      INVENTORY_JWT_PUBLIC_KEY_BASE64: ${E2E_PUBLIC_KEY:?}
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+  api:
+    build:
+      context: .
+      dockerfile: src/OrderManagement.API/Dockerfile
+    ports: ["127.0.0.1::8080"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=order-db;Database=orders;Username=e2e;SSL Mode=Disable
+      PGPASSWORD: ${E2E_DB_PASSWORD:?}
+      Jwt__SigningKeyBase64: ${E2E_USER_KEY:?}
+      Jwt__Issuer: OrderManagement.API
+      Jwt__Audience: OrderManagement.Client
+      BootstrapAdmin__Enabled: "false"
+      Inventory__Enabled: "true"
+      Inventory__BaseUrl: http://inventory:8080/
+      Inventory__PrivateKeyPath: /run/e2e/private-key.pem
+    volumes:
+      - type: bind
+        source: ${E2E_KEY_PATH:?}
+        target: /run/e2e/private-key.pem
+        read_only: true
+    depends_on:
+      order-db:
+        condition: service_healthy

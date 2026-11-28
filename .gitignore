@@ -498,3 +498,9 @@ crash.*.log
 
 # Local development JWT private keys and tokens
 /.local-inventory-auth/
+
+# Disposable integration credentials and reports
+/.ci-integration/
+/artifacts/
+
+/.ci-e2e-run.log

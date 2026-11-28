@@ -165,6 +165,7 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 12.2 — Durable Order Submission Tracking](docs/part-3/section-12-2-durable-submission-tracking.md)
 
 - [Section 12.3 — Local Integrated Orders and Recovery](docs/part-3/section-12-3-local-integrated-orders.md)
+- [Section 12.4 — Automated Integration and Recovery Tests](docs/part-3/section-12-4-integration-recovery-tests.md)
 
 ## Testing
 
@@ -218,6 +219,3 @@ README.md              Project home
 - AWS functional verification passed; production load, disaster recovery, and high availability testing remain outside this exercise. See Section 9.2.
 - AWS exercise resources remain running; review costs and the exact plan before any cleanup. Preserve the company domain and hosted zone.
 - Earlier section instructions are milestone records rather than a replacement for current configuration.
-
-
-

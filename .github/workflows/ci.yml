@@ -65,9 +65,28 @@ jobs:
         - name: Build and run Java tests
           run: sh ./mvnw --batch-mode --no-transfer-progress clean verify
     
+    e2e:
+        name: .NET and Java - Integration and Recovery
+        runs-on: ubuntu-24.04
+        timeout-minutes: 25
+        steps:
+          - name: Check out repository
+            uses: actions/checkout@v7.0.1
+            with:
+              persist-credentials: false
+          - name: Run isolated PostgreSQL integration checks
+            run: python3 scripts/e2e-orders.py
+          - name: Upload sanitized test results
+            if: always()
+            uses: actions/upload-artifact@v7.0.2
+            with:
+              name: integration-results
+              path: artifacts/e2e-results.json
+              if-no-files-found: warn
+
     publish-api:
         name: Publish API image to ECR
-        needs: [dotnet, inventory]
+        needs: [dotnet, inventory, e2e]
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         runs-on: ubuntu-24.04
         timeout-minutes: 20
