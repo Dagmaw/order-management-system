@@ -6,6 +6,8 @@ on:
     paths:
       - 'infra/aws/dev/**'
       - '.github/workflows/terraform-dev.yml'
+      - 'scripts/verify_deployment.py'
+      - 'scripts/test-deployment-verification.py'
   workflow_dispatch:
     inputs:
       apply:
@@ -87,6 +89,7 @@ jobs:
       plan_sha256: ${{ steps.saved_plan.outputs.sha256 }}
   apply:
     name: Apply reviewed AWS changes
+    timeout-minutes: 45
     needs: plan
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.apply
     runs-on: ubuntu-24.04
@@ -132,3 +135,15 @@ jobs:
         env:
           PLAN_KEY: ${{ needs.plan.outputs.plan_key }}
         run: aws s3 rm "s3://order-management-tfstate-dev-638500336727-us-east-1/${PLAN_KEY}" --only-show-errors
+
+      - name: Export non-secret deployment expectations
+        run: terraform output -json deployment_verification > runtime-expectations.json
+      - name: Verify deployed services and read-only API behavior
+        run: python3 ../../../scripts/verify_deployment.py --manifest runtime-expectations.json --report ../../../artifacts/deployment-verification.json
+      - name: Upload sanitized deployment verification
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: deployment-verification
+          path: artifacts/deployment-verification.json
+          if-no-files-found: warn
