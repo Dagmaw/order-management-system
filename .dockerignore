@@ -29,3 +29,9 @@ tests/
 artifacts
 
 .ci-e2e-run.log
+
+# Terraform runtime files and saved plans can contain infrastructure secrets.
+**/.terraform/
+**/*.tfplan
+**/*.tfstate
+**/*.tfstate.*

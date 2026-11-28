@@ -1,0 +1,53 @@
+{
+  "Statement": [
+    {
+      "Sid": "ReadCognitoConfiguration",
+      "Action": [
+        "cognito-idp:DescribeUserPool",
+        "cognito-idp:GetUserPoolMfaConfig",
+        "cognito-idp:ListTagsForResource",
+        "cognito-idp:DescribeUserPoolClient",
+        "cognito-idp:DescribeUserPoolDomain",
+        "cognito-idp:DescribeResourceServer"
+      ],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-east-1"
+        }
+      }
+    },
+    {
+      "Sid": "ReadServiceIdentitySecret",
+      "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:secretsmanager:us-east-1:638500336727:secret:order-management/dev/orders-service-identity-*"
+    },
+    {
+      "Sid": "ReadVerificationRole",
+      "Action": [
+        "iam:GetRole",
+        "iam:ListRolePolicies",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:iam::638500336727:role/order-management-dev-service-identity-test"
+    },
+    {
+      "Sid": "StorePrivatePlans",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::order-management-tfstate-dev-638500336727-us-east-1/reviewed-plans/*"
+    }
+  ],
+  "Version": "2012-10-17"
+}

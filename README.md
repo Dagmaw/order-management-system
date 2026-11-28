@@ -168,6 +168,7 @@ See [Section 6](docs/part-2/section-06-authentication.md) for the complete acces
 - [Section 12.4 — Automated Integration and Recovery Tests](docs/part-3/section-12-4-integration-recovery-tests.md)
 - [Section 12.5 — Orders Service Identity Adapter](docs/part-3/section-12-5-service-identity-adapter.md)
 - [Section 12.6 — Inventory Provider JWT Validation](docs/part-3/section-12-6-inventory-provider-jwt.md)
+- [Section 12.7 — Amazon Cognito Service Identity](docs/part-3/section-12-7-cognito-service-identity.md)
 
 ## Testing
 

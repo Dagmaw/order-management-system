@@ -39,6 +39,11 @@ services:
       SPRING_DATASOURCE_USERNAME: e2e
       SPRING_DATASOURCE_PASSWORD: ${E2E_DB_PASSWORD:?}
       INVENTORY_OPERATIONS_ENABLED: "true"
+      INVENTORY_JWT_MODE: ${E2E_JWT_MODE:-LocalRsa}
+      INVENTORY_JWT_ISSUER: ${E2E_ISSUER:-Inventory.LocalIssuer}
+      INVENTORY_JWT_JWK_SET_URI: ${E2E_JWKS_URI:-}
+      INVENTORY_JWT_ALLOWED_CLIENT_IDS: ${E2E_CLIENT_ID:-}
+      INVENTORY_JWT_RESERVATION_SCOPE: ${E2E_SCOPE:-inventory.reserve}
       INVENTORY_JWT_PUBLIC_KEY_BASE64: ${E2E_PUBLIC_KEY:?}
     depends_on:
       inventory-db:
@@ -57,6 +62,11 @@ services:
       Jwt__Audience: OrderManagement.Client
       BootstrapAdmin__Enabled: "false"
       Inventory__Enabled: "true"
+      Inventory__AuthenticationMode: ${E2E_AUTH_MODE:-LocalRsa}
+      Inventory__TokenEndpoint: ${E2E_TOKEN_ENDPOINT:-}
+      Inventory__ClientId: ${E2E_CLIENT_ID:-}
+      Inventory__ClientSecret: ${E2E_CLIENT_SECRET:-}
+      Inventory__Scope: ${E2E_SCOPE:-inventory.reserve}
       Inventory__BaseUrl: http://inventory:8080/
       Inventory__PrivateKeyPath: /run/e2e/private-key.pem
     volumes:

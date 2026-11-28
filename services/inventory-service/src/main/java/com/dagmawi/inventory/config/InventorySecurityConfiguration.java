@@ -52,10 +52,13 @@ public class InventorySecurityConfiguration {
                 throw new IllegalArgumentException("Local Inventory signing keys are not allowed in production.");
             return InventoryJwtDecoders.local(encodedKey, issuer, audience);
         }
-        if (!"Jwks".equals(mode)) throw new IllegalArgumentException("Inventory JWT mode must be LocalRsa or Jwks.");
+        if (!"Jwks".equals(mode) && !"Cognito".equals(mode))
+            throw new IllegalArgumentException("Inventory JWT mode must be LocalRsa, Jwks, or Cognito.");
         var clients = Arrays.stream(clientIds.split(",")).map(String::trim)
                 .filter(value -> !value.isEmpty()).collect(Collectors.toSet());
-        return InventoryJwtDecoders.provider(issuer, audience, jwks, clients, inventoryJwksRestOperations);
+        return "Cognito".equals(mode)
+                ? InventoryJwtDecoders.cognito(issuer, jwks, clients, inventoryJwksRestOperations)
+                : InventoryJwtDecoders.provider(issuer, audience, jwks, clients, inventoryJwksRestOperations);
     }
 
     @Bean
