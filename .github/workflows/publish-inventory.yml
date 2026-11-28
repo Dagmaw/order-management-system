@@ -1,0 +1,40 @@
+name: Publish Inventory Image
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and test Inventory image
+        run: docker build --platform linux/amd64 --file services/inventory-service/Dockerfile --tag inventory:verified services/inventory-service
+      - name: Assume Inventory-only publishing role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::638500336727:role/order-management-dev-inventory-publish
+          aws-region: us-east-1
+      - uses: aws-actions/amazon-ecr-login@v2.1.7
+      - name: Publish immutable image
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="638500336727.dkr.ecr.us-east-1.amazonaws.com/inventory-service"
+          result="$(aws ecr batch-get-image --repository-name inventory-service --image-ids "imageTag=$GITHUB_SHA" --output json)"
+          digest="$(jq -r '.images[0].imageId.imageDigest // empty' <<< "$result")"
+          if [[ -z "$digest" ]]; then
+            jq -e '(.failures | length) == 1 and .failures[0].failureCode == "ImageNotFound"' <<< "$result" >/dev/null
+            docker tag inventory:verified "$image:$GITHUB_SHA"
+            docker push "$image:$GITHUB_SHA"
+            digest="$(aws ecr batch-get-image --repository-name inventory-service --image-ids "imageTag=$GITHUB_SHA" --query 'images[0].imageId.imageDigest' --output text)"
+          fi
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf '### Tested Inventory image\n\n`%s@%s`\n' "$image" "$digest" >> "$GITHUB_STEP_SUMMARY"

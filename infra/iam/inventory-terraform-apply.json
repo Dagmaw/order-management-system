@@ -1,0 +1,296 @@
+{
+  "Statement": [
+    {
+      "Resource": "arn:aws:ecr:us-east-1:638500336727:repository/inventory-service",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:DescribeRepositories",
+        "ecr:ListTagsForResource",
+        "ecr:GetLifecyclePolicy"
+      ],
+      "Sid": "ReadInventoryRepository"
+    },
+    {
+      "Resource": "arn:aws:iam::638500336727:role/order-management-dev-inventory-*",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies"
+      ],
+      "Sid": "ReadInventoryRoles"
+    },
+    {
+      "Resource": "arn:aws:secretsmanager:us-east-1:638500336727:secret:order-management/dev/inventory-database-*",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetResourcePolicy"
+      ],
+      "Sid": "ReadInventorySecretMetadata"
+    },
+    {
+      "Resource": "arn:aws:acm:us-east-1:638500336727:certificate/*",
+      "Effect": "Allow",
+      "Action": [
+        "acm:DescribeCertificate",
+        "acm:ListTagsForCertificate"
+      ],
+      "Sid": "ReadCertificateMetadata"
+    },
+    {
+      "Resource": "*",
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeLoadBalancerAttributes",
+        "elasticloadbalancing:DescribeListeners",
+        "elasticloadbalancing:DescribeListenerAttributes",
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:DescribeTargetGroupAttributes",
+        "elasticloadbalancing:DescribeTargetHealth",
+        "elasticloadbalancing:DescribeTags"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-east-1"
+        }
+      },
+      "Sid": "ReadRegionalLoadBalancerMetadata"
+    },
+    {
+      "Resource": [
+        "arn:aws:route53:::hostedzone/*",
+        "arn:aws:route53:::change/*"
+      ],
+      "Effect": "Allow",
+      "Action": [
+        "route53:GetHostedZone",
+        "route53:ListResourceRecordSets",
+        "route53:ListTagsForResource",
+        "route53:GetChange"
+      ],
+      "Sid": "ReadDnsMetadata"
+    },
+    {
+      "Resource": "*",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ListHostedZones",
+        "route53:ListHostedZonesByName"
+      ],
+      "Sid": "ListDnsZones"
+    },
+    {
+      "Resource": "*",
+      "Effect": "Allow",
+      "Action": "logs:DescribeLogGroups",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-east-1"
+        }
+      },
+      "Sid": "DescribeRegionalLogs"
+    },
+    {
+      "Resource": "arn:aws:logs:us-east-1:638500336727:log-group:/ecs/order-management-dev/inventory*",
+      "Effect": "Allow",
+      "Action": [
+        "logs:ListTagsForResource",
+        "logs:ListTagsLogGroup"
+      ],
+      "Sid": "ReadInventoryLogTags"
+    },
+    {
+      "Resource": [
+        "arn:aws:ecs:us-east-1:638500336727:service/order-management-dev/order-management-dev-inventory",
+        "arn:aws:ecs:us-east-1:638500336727:task-definition/order-management-dev-inventory:*"
+      ],
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServices",
+        "ecs:DescribeTaskDefinition",
+        "ecs:ListTagsForResource"
+      ],
+      "Sid": "ReadInventoryEcs"
+    },
+    {
+      "Resource": "arn:aws:ecr:us-east-1:638500336727:repository/inventory-service",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:CreateRepository",
+        "ecr:DeleteRepository",
+        "ecr:PutImageTagMutability",
+        "ecr:PutImageScanningConfiguration",
+        "ecr:PutLifecyclePolicy",
+        "ecr:DeleteLifecyclePolicy",
+        "ecr:TagResource",
+        "ecr:UntagResource"
+      ],
+      "Sid": "ManageInventoryRepository"
+    },
+    {
+      "Resource": "arn:aws:iam::638500336727:role/order-management-dev-inventory-*",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy"
+      ],
+      "Sid": "ManageInventoryRoles"
+    },
+    {
+      "Resource": [
+        "arn:aws:iam::638500336727:role/order-management-dev-inventory-execution",
+        "arn:aws:iam::638500336727:role/order-management-dev-inventory-task"
+      ],
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "ecs-tasks.amazonaws.com"
+        }
+      },
+      "Sid": "PassInventoryEcsRoles"
+    },
+    {
+      "Resource": "arn:aws:secretsmanager:us-east-1:638500336727:secret:order-management/dev/inventory-database-*",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:UpdateSecret",
+        "secretsmanager:DeleteSecret",
+        "secretsmanager:RestoreSecret",
+        "secretsmanager:TagResource",
+        "secretsmanager:UntagResource"
+      ],
+      "Sid": "ManageInventorySecretMetadata"
+    },
+    {
+      "Resource": "*",
+      "Effect": "Allow",
+      "Action": "acm:RequestCertificate",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/Component": "inventory",
+          "aws:RequestTag/Project": "order-management-system"
+        }
+      },
+      "Sid": "RequestTaggedInventoryCertificate"
+    },
+    {
+      "Resource": "arn:aws:acm:us-east-1:638500336727:certificate/*",
+      "Effect": "Allow",
+      "Action": [
+        "acm:AddTagsToCertificate",
+        "acm:RemoveTagsFromCertificate",
+        "acm:DeleteCertificate"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Component": "inventory"
+        }
+      },
+      "Sid": "ManageTaggedInventoryCertificate"
+    },
+    {
+      "Resource": [
+        "arn:aws:elasticloadbalancing:us-east-1:638500336727:loadbalancer/app/order-management-dev-inventory/*",
+        "arn:aws:elasticloadbalancing:us-east-1:638500336727:listener/app/order-management-dev-inventory/*/*",
+        "arn:aws:elasticloadbalancing:us-east-1:638500336727:targetgroup/ominv-*/*"
+      ],
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:CreateLoadBalancer",
+        "elasticloadbalancing:DeleteLoadBalancer",
+        "elasticloadbalancing:ModifyLoadBalancerAttributes",
+        "elasticloadbalancing:CreateTargetGroup",
+        "elasticloadbalancing:DeleteTargetGroup",
+        "elasticloadbalancing:ModifyTargetGroup",
+        "elasticloadbalancing:ModifyTargetGroupAttributes",
+        "elasticloadbalancing:CreateListener",
+        "elasticloadbalancing:ModifyListener",
+        "elasticloadbalancing:ModifyListenerAttributes",
+        "elasticloadbalancing:DeleteListener",
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:RemoveTags"
+      ],
+      "Sid": "ManagePrivateInventoryLoadBalancer"
+    },
+    {
+      "Resource": "*",
+      "Effect": "Allow",
+      "Action": "route53:CreateHostedZone",
+      "Sid": "CreatePrivateDnsZone"
+    },
+    {
+      "Resource": "arn:aws:route53:::hostedzone/*",
+      "Effect": "Allow",
+      "Action": "route53:ChangeTagsForResource",
+      "Sid": "TagDnsZone"
+    },
+    {
+      "Resource": "arn:aws:route53:::hostedzone/*",
+      "Effect": "Allow",
+      "Action": "route53:ChangeResourceRecordSets",
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+            "inventory.dev.internal.kaddigitalsolutions.com",
+            "*.inventory.dev.internal.kaddigitalsolutions.com"
+          ]
+        }
+      },
+      "Sid": "ManageOnlyInventoryDnsRecords"
+    },
+    {
+      "Resource": "arn:aws:logs:us-east-1:638500336727:log-group:/ecs/order-management-dev/inventory*",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:DeleteLogGroup",
+        "logs:PutRetentionPolicy",
+        "logs:DeleteRetentionPolicy",
+        "logs:TagResource",
+        "logs:UntagResource",
+        "logs:TagLogGroup",
+        "logs:UntagLogGroup"
+      ],
+      "Sid": "ManageInventoryLogs"
+    },
+    {
+      "Resource": "*",
+      "Effect": "Allow",
+      "Action": "ecs:RegisterTaskDefinition",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/Component": "inventory",
+          "aws:RequestTag/Project": "order-management-system"
+        }
+      },
+      "Sid": "RegisterInventoryTaskDefinitions"
+    },
+    {
+      "Resource": [
+        "arn:aws:ecs:us-east-1:638500336727:service/order-management-dev/order-management-dev-inventory",
+        "arn:aws:ecs:us-east-1:638500336727:task-definition/order-management-dev-inventory:*"
+      ],
+      "Effect": "Allow",
+      "Action": [
+        "ecs:CreateService",
+        "ecs:UpdateService",
+        "ecs:DeleteService",
+        "ecs:TagResource",
+        "ecs:UntagResource",
+        "ecs:DeregisterTaskDefinition"
+      ],
+      "Sid": "ManageInventoryEcs"
+    }
+  ],
+  "Version": "2012-10-17"
+}
