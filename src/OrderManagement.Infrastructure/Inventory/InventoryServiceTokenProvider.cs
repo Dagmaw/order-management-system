@@ -6,7 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace OrderManagement.Infrastructure.Inventory;
 
-public interface IInventoryServiceTokenProvider { string CreateToken(); }
+public interface IInventoryServiceTokenProvider { ValueTask<string> GetTokenAsync(CancellationToken cancellationToken = default); }
 
 // Development-only issuer adapter. Replace with identity-provider token acquisition later.
 public sealed class InventoryServiceTokenProvider : IInventoryServiceTokenProvider, IDisposable
@@ -20,6 +20,11 @@ public sealed class InventoryServiceTokenProvider : IInventoryServiceTokenProvid
         try { _rsa.ImportFromPem(File.ReadAllText(_options.PrivateKeyPath)); _rsa.ExportParameters(true); }
         catch { _rsa.Dispose(); throw new InvalidOperationException("A valid local Inventory private signing key is required."); }
         if (_rsa.KeySize < 2048) { _rsa.Dispose(); throw new InvalidOperationException("Inventory RSA key must be at least 2048 bits."); }
+    }
+    public ValueTask<string> GetTokenAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult(CreateToken());
     }
     public string CreateToken()
     {

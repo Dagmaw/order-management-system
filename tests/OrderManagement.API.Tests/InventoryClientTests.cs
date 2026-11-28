@@ -14,7 +14,7 @@ public class InventoryClientTests
 {
     private static readonly Guid Id = Guid.NewGuid();
     private static readonly InventoryReservationItem[] Items = [new(1, 2)];
-    private sealed class Tokens : IInventoryServiceTokenProvider { public string CreateToken() => "test-token"; }
+    private sealed class Tokens : IInventoryServiceTokenProvider { public ValueTask<string> GetTokenAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult("test-token"); }
     private sealed class Handler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> send) : HttpMessageHandler
     {
         public int Calls { get; private set; }

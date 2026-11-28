@@ -20,7 +20,7 @@ var settings = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<s
     ["Inventory:PrivateKeyPath"] = Path.Combine(root, ".local-inventory-auth", "private-key.pem")
 }).Build();
 var services = new ServiceCollection().AddLogging();
-services.AddLocalInventoryClient(settings, new LocalEnvironment());
+services.AddInventoryClient(settings, new LocalEnvironment());
 using var provider = services.BuildServiceProvider();
 var client = provider.GetRequiredService<IInventoryClient>();
 Guid id;
