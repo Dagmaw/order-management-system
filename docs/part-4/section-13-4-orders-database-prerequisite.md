@@ -2,6 +2,8 @@
 
 ## Status and deployment order
 
+Completed in AWS on 28 November 2026. [Task-definition deployment](https://github.com/Dagmaw/order-management-system/actions/runs/46118395974) succeeded, producing revision 7. [Orders migration run](https://github.com/Dagmaw/order-management-system/actions/runs/46119087256) succeeded with exit code 0. Logs reported two pending migrations, migration completion, and application-login verification. Orders returned HTTP 200 Healthy afterward; private Inventory remained at one running task. The sequence below records the completed procedure.
+
 The Java Inventory service is healthy in AWS. Orders is still running its earlier API image, with Inventory integration disabled. This section prepares the Orders migration task; it does not enable Inventory calls or deploy a new API image.
 
 Use this order: update the migration task definition, run the additive migrations successfully, then prepare and review the API integration deployment. Do not enable the recovery worker before its database tables exist.

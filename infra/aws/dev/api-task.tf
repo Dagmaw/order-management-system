@@ -41,7 +41,7 @@ resource "aws_ecs_task_definition" "api" {
         }
       ]
 
-      environment = [
+      environment = concat([
         { name = "ASPNETCORE_ENVIRONMENT", value = "Production" },
         { name = "ApiDocs__Enabled", value = "true" },
         { name = "ASPNETCORE_HTTP_PORTS", value = "8080" },
@@ -57,9 +57,9 @@ resource "aws_ecs_task_definition" "api" {
         { name = "ReverseProxy__Enabled", value = "true" },
         { name = "ReverseProxy__KnownNetworks__0", value = aws_subnet.main["public_a"].cidr_block },
         { name = "ReverseProxy__KnownNetworks__1", value = aws_subnet.main["public_b"].cidr_block }
-      ]
+      ], local.orders_inventory_environment)
 
-      secrets = [
+      secrets = concat([
         {
           name      = "PGUSER"
           valueFrom = "${aws_secretsmanager_secret.application_database.arn}:username::"
@@ -72,7 +72,7 @@ resource "aws_ecs_task_definition" "api" {
           name      = "Jwt__SigningKeyBase64"
           valueFrom = aws_secretsmanager_secret.api_jwt.arn
         }
-      ]
+      ], local.orders_inventory_secrets)
 
       logConfiguration = {
         logDriver = "awslogs"
@@ -85,7 +85,17 @@ resource "aws_ecs_task_definition" "api" {
     }
   ])
 
-  depends_on = [aws_iam_role_policy.api_execution]
+  lifecycle {
+    precondition {
+      condition = !var.orders_inventory_enabled || (
+        var.inventory_image != "" &&
+        local.api_image != "638500336727.dkr.ecr.us-east-1.amazonaws.com/order-management-api@sha256:5d7ac5807863bbc0b651561413407ed6a367d3c87e53b299c4aa08b43a0719f6"
+      )
+      error_message = "Enable Inventory only after Java activation and pinning the reviewed API release digest."
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.api_execution, aws_iam_role_policy.api_inventory_identity]
 
   tags = {
     Project     = "order-management-system"
