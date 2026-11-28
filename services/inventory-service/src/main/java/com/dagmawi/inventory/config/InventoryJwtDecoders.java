@@ -64,7 +64,7 @@ public final class InventoryJwtDecoders {
                 Object type = jwt.getHeaders().get("typ");
                 valid = valid && client instanceof String && clients.contains(client)
                         && (cognito ? "access".equals(use) && jwt.getSubject().equals(client) : use == null || "access".equals(use))
-                        && ("JWT".equals(type) || "at+jwt".equals(type));
+                        && ((cognito && type == null) || "JWT".equals(type) || "at+jwt".equals(type));
             }
             return valid ? OAuth2TokenValidatorResult.success() : OAuth2TokenValidatorResult.failure(
                     new OAuth2Error("invalid_token", "Required Inventory claims are missing or invalid.", null));

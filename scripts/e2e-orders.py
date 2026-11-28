@@ -51,8 +51,10 @@ def request(base, path, method='GET', body=None, token=None, key=None):
         return response.status, body
 
 
-def expect(name, condition):
+def expect(name, condition, details=None):
     if not condition:
+        if details is not None:
+            print('FAIL DETAILS: ' + json.dumps(details), flush=True)
         raise AssertionError(name)
     RESULTS.append(name)
     print('PASS: ' + name, flush=True)
@@ -94,7 +96,8 @@ def tests():
     payload = {'items': [{'productId': 1, 'quantity': 2}]}
     key = str(uuid.uuid4())
     status, order = request(api, '/api/orders', 'POST', payload, token, key)
-    expect('Order reserves stock and freezes price', status == 201 and order['totalAmount'] == 60)
+    expect('Order reserves stock and freezes price', status == 201 and order['totalAmount'] == 60,
+           {'http_status': status, 'submission_state': order.get('state') if isinstance(order, dict) else None})
     status, replay = request(api, '/api/orders', 'POST', payload, token, key)
     expect('Replay returns the same order', status == 201 and replay['id'] == order['id'])
     expect('Replay does not reserve twice', request(inventory, '/api/inventory/1')[1]['availableQuantity'] == 98)
