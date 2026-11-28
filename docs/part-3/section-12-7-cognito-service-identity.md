@@ -4,9 +4,9 @@
 
 This milestone selects Amazon Cognito for machine-to-machine identity, adds its explicit Inventory token contract, and prepares the AWS configuration and real-provider verification workflow.
 
-Prepared resources are a dedicated service user pool, its OAuth domain, an Inventory resource server, a confidential Orders client, a Secrets Manager secret/version, and a narrowly scoped GitHub verification role/policy. Existing Customer login, ECS API image, RDS databases, DNS, and running services are unchanged.
+Deployed resources are a dedicated service user pool, its OAuth domain, an Inventory resource server, a confidential Orders client, a Secrets Manager secret/version, and a narrowly scoped GitHub verification role/policy. Existing Customer login, ECS API image, RDS databases, DNS, and running services are unchanged.
 
-The live Terraform preview shows **8 additions, 0 changes, 0 deletions**. Cognito provisioning completed successfully after the documented recovery. The real-provider workflow assumed its verification role after the OIDC trust correction, but failed at the first order assertion. A reproduced Cognito header compatibility bug is corrected in source; the live retry remains pending. The real Cognito exchange remains unverified until the deployment steps below complete. Do not mark this milestone deployed based only on local tests.
+**Completed and verified.** Cognito resources are deployed, and [verification run 46109337886](https://github.com/Dagmaw/order-management-system/actions/runs/46109337886) passed all 20 assertions using real AWS-issued service tokens. Orders, Inventory, and their disposable PostgreSQL databases ran on the GitHub runner; private Java hosting and integrated Orders deployment in AWS remain the next milestone. The original plan added eight resources without changing or deleting existing infrastructure.
 
 ## 2. Cost before deployment
 
@@ -130,7 +130,7 @@ After real-provider verification passes, deploy Java privately with its own data
 - All 20 local two-service integration assertions passed after updating optional provider settings and Docker exclusions.
 - AWS IAM Access Analyzer reported no policy-validation errors for either proposed bootstrap policy. The PowerShell bootstrap and Python verification runner passed syntax checks.
 - The existing state bucket was verified to have all four public-access blocks enabled.
-- Initial preparation applied no Cognito resources or IAM grants. After explicit user approval, the IAM bootstrap was installed and the main-branch plan passed. Terraform run 46106189535 now holds the private saved plan and awaits the `terraform-dev` deployment approval. Real Cognito token exchange remains pending that apply and the manual verification workflow.
+- Initial preparation applied no Cognito resources or IAM grants. After explicit user approval, the IAM bootstrap was installed and the main-branch plan passed. The initial apply required the recovery documented below. Deployment and real-token verification subsequently completed; see the completion record in section 15.
 
 ## 12. Recovery after the first apply
 
@@ -148,7 +148,7 @@ The first verification run could not assume its secret-read-only role because th
 
 The verification role and its Terraform source now require that exact subject and `aud=sts.amazonaws.com`. No wildcard was added and its dedicated-secret read policy was unchanged. See [GitHub's AWS OIDC guidance](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws).
 
-The Cognito recovery apply completed successfully in run 46107174616: 2 additions, no changes or deletions. Real-provider verification is being retried after this trust correction; it is not yet recorded as passed.
+The Cognito recovery apply completed successfully in run 46107174616: 2 additions, no changes or deletions. The subsequent header correction and successful real-provider verification are documented below.
 
 ## 14. Cognito access-token header compatibility
 
@@ -162,4 +162,23 @@ After merging this fix, start a new **Verify Cognito Service Identity** run on m
 
 Reference: [AWS access-token header documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html).
 
-Verification of the header fix: all 34 Java tests passed locally and in the Linux image build, and all 20 disposable two-service integration assertions passed. Real Cognito-backed order verification remains pending a fresh main-branch run.
+Verification of the header fix: all 34 Java tests passed locally and in the Linux image build, and all 20 disposable two-service integration assertions passed. The subsequent fresh main-branch run passed with real Cognito tokens; see section 15.
+
+## 15. Completion record — November 27, 2026
+
+[Verify Cognito Service Identity run 46109337886](https://github.com/Dagmaw/order-management-system/actions/runs/46109337886) completed successfully on merged commit `4104bf53a3d97103693b46906a3e7ed68343c5ff`.
+
+All 20 assertions passed with the real Cognito token endpoint and pool JWKS, including:
+
+- Customer registration/login and an order totaling 60.00 for two units priced at 30.00.
+- Replay returning the same order without a second stock reservation; changed payload returning a conflict.
+- Anonymous and cross-customer access rejection.
+- Inventory mutation requiring a service token.
+- Insufficient-stock compensation preserving stock.
+- Concurrent same-key requests reserving only once.
+- Inventory outage leaving a durable Pending submission.
+- Recovery after API and Inventory restarts completing one order with exactly one stock deduction.
+
+The verification role assumed successfully through GitHub OIDC, read only the dedicated client secret, and the workflow uploaded its sanitized results artifact. No access token or client secret was printed. The test used temporary application containers and databases on the GitHub runner, and its cleanup completed.
+
+Cognito service identity and real-token interoperability are complete. The deployed AWS API remains on its existing image and existing Customer login. Java Inventory has not yet been deployed into the AWS application network; that deployment, production HTTPS connectivity, API secret injection, database migrations, and integrated AWS smoke checks remain next.

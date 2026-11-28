@@ -217,7 +217,7 @@ README.md              Project home
 
 ## Current Limitations
 
-- Inventory integration is verified locally through Section 12.3; Java AWS deployment and live identity-provider verification remain pending. Service-token adapters are documented in Sections 12.5 and 12.6. Initial inventory rows are Flyway seed data.
+- Inventory integration is verified locally through Section 12.3, and real AWS Cognito service tokens passed all 20 integration/recovery checks in Section 12.7. Java AWS deployment and integrated production configuration remain pending. Initial inventory rows are Flyway seed data.
 - Authentication uses local accounts and JWTs; SSO and refresh tokens are not implemented.
 - AWS functional verification passed; production load, disaster recovery, and high availability testing remain outside this exercise. See Section 9.2.
 - AWS exercise resources remain running; review costs and the exact plan before any cleanup. Preserve the company domain and hosted zone.
