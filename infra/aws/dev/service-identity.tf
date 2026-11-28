@@ -100,7 +100,7 @@ resource "aws_iam_role" "service_identity_verification" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          "token.actions.githubusercontent.com:sub" = "repo:Dagmaw/order-management-system:environment:terraform-dev"
+          "token.actions.githubusercontent.com:sub" = "repo:Dagmaw@31310623/order-management-system@1431786532:environment:terraform-dev"
         }
       }
     }]
