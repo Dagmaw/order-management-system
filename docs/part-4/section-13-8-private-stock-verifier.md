@@ -2,6 +2,8 @@
 
 ## Status
 
+[Trusted verifier publication run 46123608516](https://github.com/Dagmaw/order-management-system/actions/runs/46123608516) succeeded. Section 13.9 now pins that image in the proposed private task and documents its review. AWS execution remains pending.
+
 The verifier implementation, non-root image, isolated integration coverage, and manual trusted publishing workflow are prepared. AWS private verification has not run yet. No AWS task, IAM, security group, or live application configuration is changed by this implementation step.
 
 ## 1. Verification design

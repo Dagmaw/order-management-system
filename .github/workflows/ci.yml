@@ -76,6 +76,8 @@ jobs:
               persist-credentials: false
           - name: Verify Maven bootstrap retry boundaries offline
             run: python3 scripts/test-maven-bootstrap.py
+          - name: Verify private stock launch and evidence restrictions
+            run: python3 scripts/test-inventory-verification-launcher.py
           - name: Verify private bootstrap launch restrictions
             run: python3 scripts/test-inventory-bootstrap-launcher.py
           - name: Verify Inventory database bootstrap over TLS
