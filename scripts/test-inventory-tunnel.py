@@ -11,6 +11,7 @@ with tempfile.TemporaryDirectory(prefix="oms-tunnel-test-") as temporary:
     fixture = pathlib.Path(temporary)
     fake = fixture / "aws"
     fake.write_text('#!/bin/sh\nif [ "$1" = sts ]; then echo denied; exit 0; fi\nexit 99\n', encoding="utf-8", newline="\n")
+    fake.chmod(0o755)
     mounts = ["-v", str(fixture)+":/fixture:ro", "-e", "PATH=/fixture:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", "-e", "TUNNEL_INSTANCE_ID=i-0123456789abcdef0"]
     # Invoke sh explicitly so Windows bind-mount executable bits are irrelevant.
     entry = 'chmod +x /fixture/aws 2>/dev/null || true; /bin/sh /usr/local/bin/start-tunnel.sh'
