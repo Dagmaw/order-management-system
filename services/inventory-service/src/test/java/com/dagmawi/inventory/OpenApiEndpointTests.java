@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {"springdoc.api-docs.enabled=true", "springdoc.swagger-ui.enabled=true"})
-class OpenApiEndpointTests {
+class OpenApiEndpointTests extends InventoryJwtSupport {
     @LocalServerPort private int port;
 
     private HttpResponse<String> get(String path) throws Exception {
