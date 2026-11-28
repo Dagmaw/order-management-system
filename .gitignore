@@ -495,3 +495,6 @@ crash.*.log
 
 
 .env.inventory.local
+
+# Local development JWT private keys and tokens
+/.local-inventory-auth/
