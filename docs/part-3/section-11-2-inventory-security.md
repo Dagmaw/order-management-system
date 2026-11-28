@@ -62,6 +62,8 @@ Generating a new token with an existing key does not require restarting Inventor
 
 Java clean verify passed all 22 tests, including the new real-signature security cases and the existing transaction/concurrency suite. The rebuilt local Docker service was also verified: public lookup 200; anonymous reservation 401; Customer reservation 403; Order-service stock update 403; authorized invalid payloads 400. These live checks did not change stock. Swagger includes the Bearer scheme and reservation security requirement. AWS was not changed.
 
+Manual verification of all Section 11.2 permission checks was also confirmed by the user.
+
 ## Automated checks and next steps
 
 Tests use freshly generated RSA keys and actual signed JWTs, not an authentication bypass. They cover anonymous 401, insufficient-scope 403, issuer/audience/signature/expiry failures, missing expiration, valid authorized requests, and public lookup. Section 11.1 transaction/concurrency tests remain in the suite and their HTTP requests now authenticate.
