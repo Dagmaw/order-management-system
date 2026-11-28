@@ -6,7 +6,7 @@ This milestone selects Amazon Cognito for machine-to-machine identity, adds its 
 
 Prepared resources are a dedicated service user pool, its OAuth domain, an Inventory resource server, a confidential Orders client, a Secrets Manager secret/version, and a narrowly scoped GitHub verification role/policy. Existing Customer login, ECS API image, RDS databases, DNS, and running services are unchanged.
 
-The live Terraform preview shows **8 additions, 0 changes, 0 deletions**. Resources are not yet applied. The IAM bootstrap requires explicit approval, and the real Cognito exchange remains unverified until the deployment steps below complete. Do not mark this milestone deployed based only on local tests.
+The live Terraform preview shows **8 additions, 0 changes, 0 deletions**. Resources are not yet applied. The user approved the IAM bootstrap and it is now installed; the saved Terraform apply is waiting at the existing GitHub environment reviewer gate. The real Cognito exchange remains unverified until the deployment steps below complete. Do not mark this milestone deployed based only on local tests.
 
 ## 2. Cost before deployment
 
@@ -57,7 +57,7 @@ The bootstrap attaches one named managed policy to each existing Terraform role.
 
 ## 5. Approve and bootstrap the required IAM permissions
 
-Automatic approval review rejected running the bootstrap because persistent IAM grants need explicit approval. No bootstrap changes have been applied.
+Automatic approval review initially rejected the bootstrap because persistent IAM grants needed explicit approval. The user subsequently approved the IAM changes, and both policies are now attached. The plan role also requires `s3:GetBucketPublicAccessBlock` on the existing state bucket to perform the workflow privacy check; this read-only correction is included in the policy file.
 
 After reviewing and approving the exact policy files, run from the repository root with the existing administrative learning profile:
 
@@ -130,4 +130,4 @@ After real-provider verification passes, deploy Java privately with its own data
 - All 20 local two-service integration assertions passed after updating optional provider settings and Docker exclusions.
 - AWS IAM Access Analyzer reported no policy-validation errors for either proposed bootstrap policy. The PowerShell bootstrap and Python verification runner passed syntax checks.
 - The existing state bucket was verified to have all four public-access blocks enabled.
-- No Cognito resources or IAM grants were applied. Real Cognito token exchange remains pending explicit IAM approval, PR review/merge, approved Terraform apply, and the manual verification workflow.
+- Initial preparation applied no Cognito resources or IAM grants. After explicit user approval, the IAM bootstrap was installed and the main-branch plan passed. Terraform run 46106189535 now holds the private saved plan and awaits the `terraform-dev` deployment approval. Real Cognito token exchange remains pending that apply and the manual verification workflow.

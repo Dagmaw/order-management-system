@@ -47,6 +47,12 @@
       ],
       "Effect": "Allow",
       "Resource": "arn:aws:s3:::order-management-tfstate-dev-638500336727-us-east-1/reviewed-plans/*"
+    },
+    {
+      "Sid": "VerifyPrivatePlanBucket",
+      "Effect": "Allow",
+      "Action": "s3:GetBucketPublicAccessBlock",
+      "Resource": "arn:aws:s3:::order-management-tfstate-dev-638500336727-us-east-1"
     }
   ],
   "Version": "2012-10-17"
