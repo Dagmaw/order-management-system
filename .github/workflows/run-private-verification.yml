@@ -1,0 +1,37 @@
+name: Run Private Stock Verification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: inventory-verification-dev
+  cancel-in-progress: false
+
+jobs:
+  verification:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: terraform-dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Assume the scoped verification workflow role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::638500336727:role/order-management-dev-inventory-verification-workflow
+          aws-region: us-east-1
+      - name: Run the fixed private verification task
+        env:
+          AWS_PAGER: ""
+          INVENTORY_VERIFICATION_TASK_DEFINITION: ${{ vars.INVENTORY_VERIFICATION_TASK_DEFINITION }}
+          INVENTORY_VERIFICATION_SUBNET_IDS: ${{ vars.INVENTORY_VERIFICATION_SUBNET_IDS }}
+          INVENTORY_VERIFICATION_SECURITY_GROUP_ID: ${{ vars.INVENTORY_VERIFICATION_SECURITY_GROUP_ID }}
+        run: python3 scripts/run-inventory-verification.py
