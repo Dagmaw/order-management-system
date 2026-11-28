@@ -244,3 +244,5 @@ README.md              Project home
 - [Read-only demo and controlled order-verification option](docs/part-5/demo.md)
 
 AWS resources remain running for the project. Historical section instructions describe their milestone; the current Terraform configuration and the handoff evidence describe the deployed system.
+
+- [Section 16 - Private Inventory Swagger tunnel](docs/part-5/section-16-inventory-session-tunnel.md)

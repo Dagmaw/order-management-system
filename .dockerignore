@@ -35,3 +35,6 @@ artifacts
 **/*.tfplan
 **/*.tfstate
 **/*.tfstate.*
+
+# Local tunnel settings and isolated browser profile
+.local-inventory-tunnel/
