@@ -38,7 +38,8 @@
       "Action": [
         "ssm:DescribeDocument",
         "ssm:GetDocument",
-        "ssm:ListTagsForResource"
+        "ssm:ListTagsForResource",
+        "ssm:DescribeDocumentPermission"
       ],
       "Resource": "arn:aws:ssm:us-east-1:638500336727:document/order-management-dev-inventory-swagger-forward"
     }
