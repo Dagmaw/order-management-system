@@ -2,7 +2,7 @@
 
 ## Current status
 
-Section 13.1 is deployed. The private endpoint, secret metadata, credentials, and Inventory image exist. The Java service is not running in AWS yet. This section prepares database bootstrap code and isolated tests; it does not apply infrastructure or run against RDS.
+Section 13.1 is deployed. The private endpoint, secret metadata, credentials, and Inventory image exist. The Java service is not running in AWS yet. The database bootstrap implementation is merged and its isolated tests passed. The updated DatabaseSetup image is published. A separate private task, scoped IAM roles, and approval-gated launch workflow are prepared for review; they have not been applied or run against RDS.
 
 ## 1. What the bootstrap does
 
@@ -51,3 +51,50 @@ CI runs these checks before the existing .NET–Java integration and recovery te
 7. Only then proceed to Java task activation, Flyway migration/readiness checks, and .NET integration configuration as separate deployment steps.
 
 No recurring Java task charge begins from the local bootstrap checks. Existing AWS resources remain running.
+
+## 5. Prepared AWS deployment (28 November 2026)
+
+The successful publication run is [Publish Database Setup Image](https://github.com/Dagmaw/order-management-system/actions/runs/46114567498). The task uses this immutable image:
+
+```text
+638500336727.dkr.ecr.us-east-1.amazonaws.com/order-management-api@sha256:e25a934e7816c06da46b5e2c05b343925bc176db8c1f4287e1da89fb9a1415c8
+```
+
+A live Terraform preview confirmed **6 additions, 0 updates, 0 deletions**:
+
+- Three dedicated roles: bootstrap execution, bootstrap application task, and bootstrap workflow.
+- Two inline permission policies, for the execution and workflow roles. The application task role has no AWS permission policy.
+- One task definition: `order-management-dev-inventory-bootstrap`, with 0.25 vCPU and 0.5 GiB memory. No ECS service is created.
+
+The execution role can pull from the existing API ECR repository, write only to the Inventory setup log group, and retrieve only the RDS administrator and Inventory database secrets. ECS injects these credentials into the one-off task. The workflow role can run only the Terraform-created task revision on the existing cluster, inspect task status, and pass only its two task roles to ECS. It cannot retrieve secret values.
+
+The workflow trust uses the repository's immutable GitHub subject and the existing `terraform-dev` environment. Main is required by the workflow. No credential or operation overrides are accepted by the launcher. Public IP assignment is disabled.
+
+### Permission review and deployment sequence
+
+1. Review `infra/aws/dev/inventory-bootstrap.tf`, the two `infra/iam/inventory-bootstrap-terraform-*.json` files, and `scripts/initialize-inventory-bootstrap-permissions.ps1`.
+2. Approve the new IAM permissions and six-resource deployment before installing the supplemental policies. The existing Inventory Terraform policies remain unchanged. The supplements add only bootstrap task metadata/lifecycle permissions and permission to pass its two task roles to ECS.
+3. After approval, run `scripts/initialize-inventory-bootstrap-permissions.ps1` using the project AWS profile. It verifies the account, creates the two named policies if absent, and attaches each only to the matching Terraform plan/apply role. It refuses to overwrite differing existing policies.
+4. Merge the reviewed task/workflow changes after CI passes.
+5. Start Terraform AWS Dev with apply enabled. Review the fresh plan and approve `terraform-dev` only if it still contains the six bootstrap additions. The local preview is not the saved plan used by the approved workflow.
+6. Read the non-secret `inventory_bootstrap` Terraform output. Configure these GitHub repository/environment variables from that output:
+
+| GitHub variable | Terraform output field |
+| --- | --- |
+| INVENTORY_BOOTSTRAP_TASK_DEFINITION | task_definition_arn |
+| INVENTORY_BOOTSTRAP_SUBNET_IDS | subnet_ids |
+| INVENTORY_BOOTSTRAP_SECURITY_GROUP_ID | security_group_id |
+
+7. Start **Run Inventory Database Bootstrap** from main. Review and approve its `terraform-dev` environment deployment. The workflow assumes the dedicated bootstrap role and runs exactly one task in the private app subnets.
+8. Require the workflow to succeed and the `inventory-bootstrap` container to stop with exit code 0. Its application success message means the database owner, dedicated login, and certificate-verified application connection were checked. Inspect `/ecs/order-management-dev/inventory-setup` privately if it fails; do not paste credential-bearing diagnostics into issues.
+9. If a task fails after role creation but before database creation, correct the cause and rerun the same operation with the same managed secret. Do not delete the role or database. Foreign ownership requires investigation; the bootstrap deliberately refuses a takeover.
+10. Keep `inventory_image` empty until the separate Java activation step is reviewed. Leave the existing API and Orders migration image pins unchanged.
+
+The six resources add no continuously running task. Executing bootstrap incurs one-off Fargate and related usage charges; it does not activate the monthly Java service capacity.
+
+### Verification performed
+
+- Terraform formatting and validation passed.
+- Live preview confirmed exactly six bootstrap additions and no updates or deletions.
+- Five offline launcher checks passed: fixed task/private network/no secret overrides, incorrect task rejection, incorrect account rejection, failed exit rejection, and status inspection after waiter failure.
+- The merged bootstrap implementation already passed disposable TLS PostgreSQL 18 checks, including non-superuser execution, concurrency, isolation, repeat runs, certificate hostname rejection, and foreign ownership protection.
