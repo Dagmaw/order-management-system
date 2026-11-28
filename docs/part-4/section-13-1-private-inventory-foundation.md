@@ -156,3 +156,5 @@ The baseline is a single Inventory task and a shared RDS instance. It does not y
 - No Inventory IAM policy was installed and no foundation resources were applied.
 
 Next work is private database bootstrap, image pinning/service activation, an in-VPC smoke-test mechanism, and then the reviewed Orders AWS integration. Keep current AWS resources running throughout this project.
+
+The final runtime-image check caught and corrected certificate-directory traversal permissions. The Dockerfile now checks CA readability after switching to the non-root application user, and the rebuilt image passed that check.
