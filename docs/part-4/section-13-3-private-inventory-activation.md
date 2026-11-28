@@ -95,7 +95,7 @@ The correction is `infra/iam/inventory-deployment-read.json`, installed through 
 2. Confirm the live service is the intended service, uses the intended task definition, has completed its deployment, and passes readiness.
 3. Inspect the state for `aws_ecs_service.inventory[0]`. This failure marked it tainted even though the remote service was healthy.
 4. Only after those checks, clear that marker with `terraform untaint 'aws_ecs_service.inventory[0]'`. This changes the state marker only; it does not restart or recreate the service.
-5. Run a fresh plan, rather than retrying the old saved plan. Recovery verification uses [run 46117296782](https://github.com/Dagmaw/order-management-system/actions/runs/46117296782).
+5. Run a fresh plan, rather than retrying the old saved plan. Recovery verification [run 46117296782](https://github.com/Dagmaw/order-management-system/actions/runs/46117296782) passed and reported: `No changes. Your infrastructure matches the configuration.`
 6. Require the fresh plan to report no infrastructure changes. Investigate any unexpected replacement before approving an apply.
 
 Do not rerun the failed job with the stale saved activation plan, delete the service, or disable stability checks to work around a missing read permission. Orders-to-Inventory integration in AWS remains the following milestone.
